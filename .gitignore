@@ -1,0 +1,19 @@
+# -------------------
+# .NET (server)
+# -------------------
+server/**/bin
+server/**/obj
+server/build/
+
+# -------------------
+# React (client)
+# -------------------
+client/**/node_modules/
+client/**/dist/
+client/build
+
+# -------------------
+# Rider/VSCode (IDE)
+# -------------------
+.idea
+.vscode
