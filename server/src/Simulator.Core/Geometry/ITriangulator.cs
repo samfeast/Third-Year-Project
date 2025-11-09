@@ -4,5 +4,5 @@ namespace Simulator.Core.Geometry;
 
 public interface ITriangulator
 {
-    List<Triangle> Triangulate(Polygon input);
+    List<Triangle> Triangulate(List<Polygon> input);
 }
