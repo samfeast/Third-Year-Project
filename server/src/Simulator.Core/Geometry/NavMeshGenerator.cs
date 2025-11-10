@@ -15,7 +15,6 @@ public class NavMeshGenerator
             Console.WriteLine(triangle);
         }
         
-        
         return new List<Polygon>();
     }
 }

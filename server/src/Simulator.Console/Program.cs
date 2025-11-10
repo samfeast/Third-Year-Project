@@ -11,10 +11,16 @@ public class Program
         // Unit square
         List<Vector2Int> vertices =
         [
-            new (0, 0),
-            new (0, 1),
-            new (1, 1),
-            new (1, 0)
+            new (3, 48),
+            new (52, 8),
+            new (99, 50),
+            new (138, 25),
+            new (175, 77),
+            new (131, 72),
+            new (111, 113),
+            new (72, 43),
+            new (26, 55),
+            new (29, 100)
         ];
 
         polygon.vertices = vertices;

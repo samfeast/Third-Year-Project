@@ -2,11 +2,28 @@ namespace Simulator.Core.Geometry.Primitives;
 
 public class Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
 {
-    public Vector2Int a = a;
-    public Vector2Int b = b;
-    public Vector2Int c = c;
+    public Vector2Int A = a;
+    public Vector2Int B = b;
+    public Vector2Int C = c;
     public Direction direction;
+    
+    public bool ContainsPoint(Vector2Int p)
+    {
+        var d1 = Sign(p, A, B);
+        var d2 = Sign(p, B, C);
+        var d3 = Sign(p, C, A);
+
+        var hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+        var hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+
+        return !(hasNeg && hasPos);
+    }
+
+    private int Sign(Vector2Int v0, Vector2Int v1, Vector2Int v2)
+    {
+        return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);
+    }
 
     // Always print triangle vertices in CCW order
-    public override string ToString() => direction == Direction.CCW ? $"<{a}, {b}, {c}>" : $"<{c}, {b}, {a}>";
+    public override string ToString() => direction == Direction.CCW ? $"<{A}, {B}, {C}>" : $"<{C}, {B}, {A}>";
 }
