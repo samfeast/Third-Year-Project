@@ -13,6 +13,11 @@ client/**/dist/
 client/build
 
 # -------------------
+# Python (scripts)
+# -------------------
+scripts/.venv
+
+# -------------------
 # Rider/VSCode (IDE)
 # -------------------
 .idea
