@@ -16,8 +16,8 @@ client/build/
 # Python (scripts)
 # -------------------
 scripts/.venv/
-scripts/output/
-scripts/!output/README.md
+scripts/output/*
+!scripts/output/README.md
 
 # -------------------
 # Rider/VSCode (IDE)
