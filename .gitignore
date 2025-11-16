@@ -1,8 +1,8 @@
 # -------------------
 # .NET (server)
 # -------------------
-server/**/bin
-server/**/obj
+server/**/bin/
+server/**/obj/
 server/build/
 
 # -------------------
@@ -10,15 +10,17 @@ server/build/
 # -------------------
 client/**/node_modules/
 client/**/dist/
-client/build
+client/build/
 
 # -------------------
 # Python (scripts)
 # -------------------
-scripts/.venv
+scripts/.venv/
+scripts/output/
+scripts/!output/README.md
 
 # -------------------
 # Rider/VSCode (IDE)
 # -------------------
-.idea
-.vscode
+.idea/
+.vscode/
