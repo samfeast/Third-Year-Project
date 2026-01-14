@@ -1,5 +1,6 @@
 ﻿using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Console;
 
@@ -20,7 +21,7 @@ public class Program
                 return;
             }
             Polygon polygon = new();
-            polygon.vertices = LoadVerticesFromFile(inPath);
+            polygon.vertices = GeometryFileIo.ReadVerticesFromFile(inPath);
             polygon.direction = Direction.CCW;
             polygons.Add(polygon);
         }
@@ -38,7 +39,8 @@ public class Program
         if (useFileIo)
         {
             string outPath = args[1];
-            WriteTrianglesToFile(outPath, triangles);
+            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles and saved to disk");
+            GeometryFileIo.WriteTrianglesToFile(outPath, triangles);
         }
         else
         {
@@ -47,39 +49,6 @@ public class Program
             {
                 System.Console.WriteLine(triangle);
             }
-        }
-    }
-    
-    private static List<Vector2Int> LoadVerticesFromFile(string path)
-    {
-        var result = new List<Vector2Int>();
-
-        foreach (var line in File.ReadLines(path))
-        {
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-
-            string[] parts = line.Split(',');
-
-            if (parts.Length != 2)
-                throw new FormatException($"Invalid CSV line: {line}");
-
-            var x = int.Parse(parts[0]);
-            var y = int.Parse(parts[1]);
-
-            result.Add(new Vector2Int(x, y));
-        }
-
-        return result;
-    }
-
-    private static void WriteTrianglesToFile(string path, List<Triangle> triangles)
-    {
-        using var writer = new StreamWriter(path);
-
-        foreach (var t in triangles)
-        {
-            writer.WriteLine($"{t.A.X},{t.A.Y},{t.B.X},{t.B.Y},{t.C.X},{t.C.Y}");
         }
     }
 }
