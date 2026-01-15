@@ -51,19 +51,13 @@ def is_simple_polygon(points):
     return True
 
 
-def main():
-    # Generate a random simple polygon with integer coordinates.
-
-    num_vertices = int(sys.argv[1])
-    random.seed(42 + num_vertices)
-    out_file = sys.argv[2]
-
+def generate_vertices(num_vertices, min_radius, max_radius, ccw=True):
     for _ in range(1000):
         angles = sorted(random.uniform(0, 2 * math.pi) for _ in range(num_vertices))
         points = set()
 
         for angle in angles:
-            r = random.randint(10, 80)
+            r = random.randint(min_radius, max_radius)
             x = int(round(r * math.cos(angle)))
             y = int(round(r * math.sin(angle)))
             if (x, y) != (0, 0):
@@ -74,15 +68,32 @@ def main():
 
         points = list(points)
         points.sort(key=lambda p: math.atan2(p[1], p[0]))
+        if not ccw:
+            points.reverse()
 
         if is_simple_polygon(points):
-            with open(out_file, "w", newline="") as f:
-                writer = csv.writer(f)
-                for x, y in points:
-                    writer.writerow([x, y])
-            return
+            return points
 
     raise RuntimeError("Failed to generate a simple polygon in 1000 attempts")
+
+
+def main():
+    # NOTE: This approach does not guarantee the hole will be entirely inside the outer polygon
+    num_outer_vertices = int(sys.argv[1])
+    num_hole_vertices = int(sys.argv[2])
+    random.seed(42 + num_outer_vertices + num_hole_vertices)
+    out_file = sys.argv[3]
+
+    vertices = generate_vertices(num_outer_vertices, 50, 100)
+    if num_hole_vertices > 0:
+        vertices.append("")
+        hole_vertices = generate_vertices(num_hole_vertices, 10, 29, ccw=False)
+        vertices += hole_vertices
+
+    with open(out_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        for row in vertices:
+            writer.writerow(row)
 
 
 if __name__ == "__main__":

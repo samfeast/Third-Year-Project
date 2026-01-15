@@ -4,15 +4,27 @@ namespace Simulator.Core.Geometry.Utils;
 
 public static class GeometryFileIo
 {
-    public static List<Vector2Int> ReadVerticesFromFile(string path)
+    public static List<Polygon> ReadGeometryFromFile(string path)
     {
-        var result = new List<Vector2Int>();
-
+        List<Polygon> polygons = new();
+        var parsedVertices = new List<Vector2Int>();
+        
         foreach (var line in File.ReadLines(path))
         {
+            // An empty row signifies the end of one polygon and the start of the next
+            if (string.IsNullOrWhiteSpace(line) && parsedVertices.Count > 0)
+            {
+                polygons.Add(new Polygon
+                {
+                    vertices = new List<Vector2Int>(parsedVertices)
+                });
+                parsedVertices.Clear();
+                continue;
+            }
+
             if (string.IsNullOrWhiteSpace(line))
                 continue;
-
+            
             string[] parts = line.Split(',');
 
             if (parts.Length != 2)
@@ -20,11 +32,19 @@ public static class GeometryFileIo
 
             var x = int.Parse(parts[0]);
             var y = int.Parse(parts[1]);
-
-            result.Add(new Vector2Int(x, y));
+            
+            parsedVertices.Add(new Vector2Int(x, y));
         }
 
-        return result;
+        if (parsedVertices.Count > 0)
+        {
+            polygons.Add(new Polygon
+            {
+                vertices = new List<Vector2Int>(parsedVertices)
+            });
+        }
+        
+        return polygons;
     }
     
     public static void WriteTrianglesToFile(string path, List<Triangle> triangles)

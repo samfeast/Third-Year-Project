@@ -10,6 +10,14 @@ public class EarClippingTriangulator : ITriangulator
     private HashSet<LinkedListNode<Vector2Int>> _convexVertices = [];
     private HashSet<LinkedListNode<Vector2Int>> _reflexVertices = [];
     private HashSet<LinkedListNode<Vector2Int>> _earVertices = [];
+    
+    private struct HoleInfo
+    {
+        public Polygon hole;
+        public int holeIndex;
+        public int maxX;
+        public int maxXIndex;
+    }
     public List<Triangle> Triangulate(Polygon positive, List<Polygon> negatives) 
     {
         // Construct doubly linked list with vertices in CCW order
@@ -45,12 +53,62 @@ public class EarClippingTriangulator : ITriangulator
     {
         var vertices = new LinkedList<Vector2Int>();
 
+        List<HoleInfo> holes = BuildHoleInfo(negatives);
+        
+        // Sort negative polygons with the rightmost polygon first
+        // If two polygons have the same rightmost X coordinate use index as a tiebreaker to guarantee determinism
+        holes.Sort((a, b) =>
+        {
+            int cmp = b.maxX.CompareTo(a.maxX);
+            if (cmp != 0) return cmp;
+            return a.holeIndex.CompareTo(b.holeIndex);
+        });
+        
         foreach (var vertex in positive.vertices)
         {
             vertices.AddLast(vertex);
         }
 
         return vertices;
+    }
+    
+    private static List<HoleInfo> BuildHoleInfo(List<Polygon> holes)
+    {
+        List<HoleInfo> holeInfo = new();
+        // Go through each hole and calculate the index and value of the vertex with greatest X value
+        for (int i = 0; i < holes.Count; i++)
+        {
+            var (maxX, maxIndex) = GetMaxX(holes[i].vertices);
+
+            holeInfo.Add(new HoleInfo
+            {
+                hole = holes[i],
+                holeIndex = i,
+                maxX = maxX,
+                maxXIndex = maxIndex,
+            });
+        }
+
+        return holeInfo;
+    }
+
+    // Get the greatest X coordinate from a list of vertices and its index
+    private static (int, int) GetMaxX(List<Vector2Int> vertices)
+    {
+        int maxX = vertices[0].X;
+        int maxIndex = 0;
+        
+        for (int i = 1; i < vertices.Count; i++)
+        {
+            int x = vertices[i].X;
+            if (x > maxX)
+            {
+                maxX = x;
+                maxIndex = i;
+            }
+        }
+        
+        return (maxX, maxIndex);
     }
 
     // Group all vertices into the convex and reflex sets

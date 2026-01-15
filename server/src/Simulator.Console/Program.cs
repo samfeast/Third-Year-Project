@@ -11,7 +11,8 @@ public class Program
         // If two args are given (input file, output file), use file IO, otherwise don't
         bool useFileIo = args.Length == 2;
 
-        List<Polygon> polygons = new();
+        Polygon positive;
+        List<Polygon> negatives;
         if (useFileIo)
         {
             string inPath = args[0];
@@ -20,31 +21,31 @@ public class Program
                 System.Console.WriteLine($"File not found: {inPath}");
                 return;
             }
-            Polygon polygon = new();
-            polygon.vertices = GeometryFileIo.ReadVerticesFromFile(inPath);
-            polygon.direction = Direction.CCW;
-            polygons.Add(polygon);
+            List<Polygon> polygons = GeometryFileIo.ReadGeometryFromFile(inPath);
+            positive = polygons[0];
+            polygons.RemoveAt(0);
+            negatives = polygons;
         }
         else
         {
-            Polygon polygon = new();
-            polygon.vertices = new();
-            polygon.direction = Direction.CCW;
-            polygons.Add(polygon);
+            positive = new Polygon();
+            negatives = new List<Polygon>();
         }
-
+        
         var generator = new NavMeshGenerator();
-        var triangles = generator.GenerateNavMesh(polygons);
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var triangles = generator.GenerateNavMesh(positive, negatives);
+        watch.Stop();
 
         if (useFileIo)
         {
             string outPath = args[1];
-            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles and saved to disk");
+            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles in {watch.ElapsedMilliseconds}ms and saved to disk");
             GeometryFileIo.WriteTrianglesToFile(outPath, triangles);
         }
         else
         {
-            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles");
+            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles in {watch.ElapsedMilliseconds}ms");
             foreach (var triangle in triangles)
             {
                 System.Console.WriteLine(triangle);

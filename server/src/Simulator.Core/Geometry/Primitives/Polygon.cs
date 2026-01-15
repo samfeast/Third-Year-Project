@@ -8,6 +8,17 @@ public class Polygon
     {
         vertices = [];
     }
+
+    public override string ToString()
+    {
+        string s = "";
+        foreach (var v in vertices)
+        {
+            s +=  v + ", ";
+        }
+
+        return s;
+    }
     
     
 }
