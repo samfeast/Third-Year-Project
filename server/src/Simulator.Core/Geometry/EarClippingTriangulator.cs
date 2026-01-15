@@ -10,11 +10,11 @@ public class EarClippingTriangulator : ITriangulator
     private HashSet<LinkedListNode<Vector2Int>> _convexVertices = [];
     private HashSet<LinkedListNode<Vector2Int>> _reflexVertices = [];
     private HashSet<LinkedListNode<Vector2Int>> _earVertices = [];
-    public List<Triangle> Triangulate(List<Polygon> polygons) 
+    public List<Triangle> Triangulate(Polygon positive, List<Polygon> negatives) 
     {
         // Construct doubly linked list with vertices in CCW order
         // TODO: Handle polygons with holes by ordering vertices according to bridge
-        _vertices = BuildVertexList(polygons);
+        _vertices = BuildVertexList(positive, negatives);
 
         // Handle edge cases where a triangle cannot be formed, or only one triangle can be formed
         if (_vertices.Count < 3) 
@@ -41,23 +41,13 @@ public class EarClippingTriangulator : ITriangulator
     }
     
     // Take list of input polygons and return correctly ordered vertex list
-    private static LinkedList<Vector2Int> BuildVertexList(List<Polygon> polygons)
+    private static LinkedList<Vector2Int> BuildVertexList(Polygon positive, List<Polygon> negatives)
     {
         var vertices = new LinkedList<Vector2Int>();
-        foreach (var polygon in polygons)
+
+        foreach (var vertex in positive.vertices)
         {
-            if (polygon.direction == Direction.CCW) 
-            {
-                foreach (var vertex in polygon.vertices) {
-                    vertices.AddLast(vertex);
-                } 
-            }
-            else 
-            {
-                foreach (var vertex in polygon.vertices) {
-                    vertices.AddFirst(vertex);
-                } 
-            }
+            vertices.AddLast(vertex);
         }
 
         return vertices;
