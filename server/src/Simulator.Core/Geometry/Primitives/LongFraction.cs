@@ -3,7 +3,7 @@ namespace Simulator.Core.Geometry.Primitives;
 // Struct to represent a fraction without precision issues
 // This struct does not differentiate between +ve and -ve infinities
 // All infinities are equal, infinity is larger than all fractions (i.e (-1)/0 > 1/2)
-public struct LongFraction(long num, long den)
+public readonly struct LongFraction(long num, long den) : IEquatable<LongFraction>
 {
     private readonly long _numerator = num;
     private readonly long _denominator = den;
@@ -38,16 +38,21 @@ public struct LongFraction(long num, long den)
     
     public static bool operator !=(LongFraction a, LongFraction b) => !(a == b);
     
+    public bool Equals(LongFraction other) => this == other;
     public override bool Equals(object? obj)
     {
         return obj is LongFraction other && this == other;
     }
 
+    // Evaluate all infinities to positive infinity
     public double Compute()
     {
+        if (IsInfinity) return double.PositiveInfinity;
+        
         return _numerator / (double)_denominator;
     }
     
+    // Note that 1/2 and 2/4 will have different hash codes
     public override int GetHashCode()
     {
         if (IsInfinity) return int.MaxValue; // All infinities have the same hash code
