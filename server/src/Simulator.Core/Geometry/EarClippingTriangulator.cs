@@ -73,7 +73,7 @@ public class EarClippingTriangulator : ITriangulator
 
         foreach (var hole in holes)
         {
-            FindMutuallyVisibleVertices(vertices, hole);
+            FindMutuallyVisibleVertex(vertices, hole);
         }
 
         return vertices;
@@ -118,7 +118,7 @@ public class EarClippingTriangulator : ITriangulator
         return (maxX, maxIndex);
     }
 
-    private static void FindMutuallyVisibleVertices(LinkedList<Vector2Int> outerVertices, HoleInfo holeInfo)
+    private static LinkedListNode<Vector2Int> FindMutuallyVisibleVertex(LinkedList<Vector2Int> outerVertices, HoleInfo holeInfo)
     {
         Debug.Assert(outerVertices.Count > 0, "No outer vertices to check for visibility");
         // Get the vertex of the polygon with the largest x coordinate (the origin of the raycast)
@@ -131,16 +131,25 @@ public class EarClippingTriangulator : ITriangulator
         // If T = 0 or T = 1 the ray hit a vertex exactly
         if (nearestT.IsZero || nearestT.IsOne)
         {
-            LinkedListNode<Vector2Int> mutuallyVisibleVertex;
             // FindNearestIntersection() ignores horizontal edges, so we know the vertices at each end of the edge have
             // different y coordinates - this makes it safe to check this way
-            if (M.Y == edgeStart.Value.Y) mutuallyVisibleVertex = edgeStart;
-            if (M.Y == edgeEnd.Value.Y) mutuallyVisibleVertex = edgeEnd;
-            
-            
-
+            if (M.Y == edgeStart.Value.Y) return edgeStart;
+            if (M.Y == edgeEnd.Value.Y) return edgeEnd;
         }
         
+        // The 'test region' is the triangle formed by the origin of the raycast (M), the intersection point (I), and
+        // the rightmost vertex on the intersecting edge (P)
+        var I = new Vector2Fraction(nearestIntersectionX, new LongFraction(M.Y, 1));
+        var P = edgeStart.Value.X > edgeEnd.Value.X ? edgeStart : edgeEnd;
+
+        var testRegion = new TriangleFraction(M.ToVector2Fraction(), I, P.Value.ToVector2Fraction());
+
+        // Find any vertices in the test region. If there aren't any, P is mutually visible
+        var obstructingVertices = GetObstructingVertices(outerVertices, testRegion);
+        if (obstructingVertices.Count == 0) return P;
+        
+        // Otherwise return the obstructing vertex with the minimum angle to the vector MI
+        return FindMinimumAngleVertex(obstructingVertices, M);
     }
 
     // Finds where a ray cast in the +ve x direction from M intersects with the polygon defined by outervertices
@@ -207,6 +216,52 @@ public class EarClippingTriangulator : ITriangulator
 
         return true;
     }
+
+    private static List<LinkedListNode<Vector2Int>> GetObstructingVertices(LinkedList<Vector2Int> outerVertices, TriangleFraction testRegion)
+    {
+        var obstructingVertices = new List<LinkedListNode<Vector2Int>>();
+        
+        var node = outerVertices.First;
+        while (node != null)
+        {
+            var prevNode = node.Previous ?? outerVertices.Last!;
+            var nextNode = node.Next ?? outerVertices.First!;
+            // Only need to check if reflex vertices are obstructing
+            if (IsConvex(prevNode.Value, node.Value, nextNode.Value))
+            {
+                node = node.Next;
+                continue;
+            }
+
+            var testPoint = node.Value.ToVector2Fraction();
+            if (testRegion.ContainsPoint(testPoint))
+                obstructingVertices.Add(node);
+            
+            node = node.Next;
+        }
+
+        return obstructingVertices;
+    }
+
+    private static LinkedListNode<Vector2Int> FindMinimumAngleVertex(List<LinkedListNode<Vector2Int>> vertices, Vector2Int M)
+    {
+        var minScore = new LongFraction(0, 1);
+        var minAngleVertex = vertices[0];
+        foreach (var vertex in vertices)
+        {
+            var numerator = (long)(vertex.Value.X - M.X) * (vertex.Value.X - M.X);
+            var denominator = numerator + vertex.Value.Y * vertex.Value.Y;
+
+            var score = new LongFraction(numerator, denominator);
+            if (score < minScore)
+            {
+                minScore = score;
+                minAngleVertex = vertex;
+            }
+        }
+        
+        return minAngleVertex;
+    }
     
     // Group all vertices into the convex and reflex sets
     private void ClassifyVertices()
@@ -221,20 +276,25 @@ public class EarClippingTriangulator : ITriangulator
 
     // Ensure the specified vertex is in exactly one of the convex/reflex sets
     // Returns true if the vertex is convex, false otherwise
-    private bool ClassifyVertex(LinkedListNode<Vector2Int> vertex)
+    private bool ClassifyVertex(LinkedListNode<Vector2Int> node)
     {
-        var (prevNode, nextNode) = GetNeighbours(vertex);
-        if (Cross(vertex.Value - prevNode.Value, nextNode.Value - vertex.Value) > 0)
+        var (prevNode, nextNode) = GetNeighbours(node);
+        if (IsConvex(prevNode.Value, node.Value, nextNode.Value ))
         {
-            _convexVertices.Add(vertex);
-            _reflexVertices.Remove(vertex);
+            _convexVertices.Add(node);
+            _reflexVertices.Remove(node);
             return true;
         }
 
-        _reflexVertices.Add(vertex);
-        _convexVertices.Remove(vertex);
+        _reflexVertices.Add(node);
+        _convexVertices.Remove(node);
         return false;
 
+    }
+
+    private static bool IsConvex(Vector2Int prev, Vector2Int curr, Vector2Int next)
+    {
+        return Cross(curr - prev, next - curr) > 0;
     }
     
     // Add ear vertices to the set
@@ -314,7 +374,6 @@ public class EarClippingTriangulator : ITriangulator
     // 2D cross product to determine convexity or whether a v2 lies to the left or right of directed edge v0->v1
     private static int Cross(Vector2Int a, Vector2Int b)
     {
-        //return (v1.X - v0.X)*(v2.Y - v1.Y) - (v1.Y - v0.Y)*(v2.X - v1.X);
         return a.X * b.Y - a.Y * b.X;
     }
 }

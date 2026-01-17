@@ -15,6 +15,15 @@ public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
     public override bool Equals(object? obj) => obj is Vector2Int other && Equals(other);
     
     public override int GetHashCode() => HashCode.Combine(X, Y);
-
+    
     public override string ToString() => $"({X}, {Y})";
+    
+    public int Dot(Vector2Int other) => X * other.X + Y * other.Y;
+    
+    public Vector2Fraction ToVector2Fraction()
+    {
+        var x = new LongFraction(X, 1);
+        var y = new LongFraction(Y, 1);
+        return new Vector2Fraction(x, y);
+    }
 }

@@ -17,4 +17,6 @@ public readonly struct Vector2Fraction(LongFraction x, LongFraction y) : IEquata
     public override int GetHashCode() => HashCode.Combine(X, Y);
 
     public override string ToString() => $"({X}, {Y})";
+    
+    public LongFraction Dot(Vector2Fraction other) => X * other.X + Y * other.Y;
 }
