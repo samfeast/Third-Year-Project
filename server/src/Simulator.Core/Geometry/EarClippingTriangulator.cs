@@ -69,6 +69,11 @@ public class EarClippingTriangulator : ITriangulator
             vertices.AddLast(vertex);
         }
 
+        foreach (var hole in holes)
+        {
+            FindMutuallyVisibleVertices(vertices, hole);
+        }
+
         return vertices;
     }
     
@@ -111,6 +116,64 @@ public class EarClippingTriangulator : ITriangulator
         return (maxX, maxIndex);
     }
 
+    private static void FindMutuallyVisibleVertices(LinkedList<Vector2Int> outerVertices, HoleInfo holeInfo)
+    {
+        Debug.Assert(outerVertices.Count > 0, "No outer vertices to check for visibility");
+        // Get the vertex of the polygon with the largest x coordinate (the origin of the raycast)
+        Vector2Int M = holeInfo.hole.vertices[holeInfo.maxXIndex];
+        Console.WriteLine($"M = {M}");
+
+        var nearestIntersectionX = new LongFraction(1, 0);
+        
+        var node = outerVertices.First;
+        while (node != null)
+        {
+            var A = node.Value;
+            var B = (node.Next ?? outerVertices.First)!.Value;
+
+            if (!IsValidEdge(M, A, B))
+            {
+                node = node.Next;
+                continue;
+            }
+
+            // This is a convoluted way of checking if the x coordinate of the intersection between ray and edge is on
+            // the left of the ray origin. This approach avoids division so everything is kept as integers
+            // I.e: discard the edge if Ix < M.X, where Ix = A.X + t * (B.X - A.X) and t = (M.Y - A.Y) / (B.Y - A.Y)
+            int dy = B.Y - A.Y;
+            long lhs = (M.Y - A.Y) * (B.X - A.X);
+            long rhs = (M.X - A.X) * dy;
+
+            if (dy > 0 && lhs <= rhs || dy < 0 && lhs >= rhs)
+            {
+                node = node.Next;
+                continue;
+            }
+
+            long candidateIxNumerator = A.X * (B.Y - A.Y) + (M.Y - A.Y) * (B.X - A.X);
+            long candidateIxDenominator = B.Y - A.Y;
+            var candidateIntersectionX = new LongFraction(candidateIxNumerator, candidateIxDenominator);
+
+            if (candidateIntersectionX < nearestIntersectionX)
+            {
+                nearestIntersectionX = candidateIntersectionX;
+                Console.WriteLine($"{A}-{B} intersects ray at X={nearestIntersectionX.Compute()} (new nearest)");
+            }
+            
+            node = node.Next;
+        }
+    }
+
+    private static bool IsValidEdge(Vector2Int M, Vector2Int A, Vector2Int B)
+    {
+        if (A.Y == B.Y) return false; // Horizontal edges are not valid
+        if (Math.Min(A.Y, B.Y) > M.Y || 
+            Math.Max(A.Y, B.Y) <= M.Y) return false; // Edges entirely above or below the ray are not valid
+        if (Cross(B - A, M - A) <= 0) return false; // Edges exterior to ray are not valid
+
+        return true;
+    }
+    
     // Group all vertices into the convex and reflex sets
     private void ClassifyVertices()
     {
@@ -127,7 +190,7 @@ public class EarClippingTriangulator : ITriangulator
     private bool ClassifyVertex(LinkedListNode<Vector2Int> vertex)
     {
         var (prevNode, nextNode) = GetNeighbours(vertex);
-        if (Cross(prevNode.Value, vertex.Value, nextNode.Value) > 0)
+        if (Cross(vertex.Value - prevNode.Value, nextNode.Value - vertex.Value) > 0)
         {
             _convexVertices.Add(vertex);
             _reflexVertices.Remove(vertex);
@@ -214,9 +277,10 @@ public class EarClippingTriangulator : ITriangulator
         return new Triangle(_vertices.First!.Value, _vertices.First.Next!.Value, _vertices.Last!.Value);
     }
     
-    // 2D cross product to determine convexity
-    private static int Cross(Vector2Int v0, Vector2Int v1, Vector2Int v2)
+    // 2D cross product to determine convexity or whether a v2 lies to the left or right of directed edge v0->v1
+    private static int Cross(Vector2Int a, Vector2Int b)
     {
-        return (v1.X - v0.X)*(v2.Y - v1.Y) - (v1.Y - v0.Y)*(v2.X - v1.X);
+        //return (v1.X - v0.X)*(v2.Y - v1.Y) - (v1.Y - v0.Y)*(v2.X - v1.X);
+        return a.X * b.Y - a.Y * b.X;
     }
 }

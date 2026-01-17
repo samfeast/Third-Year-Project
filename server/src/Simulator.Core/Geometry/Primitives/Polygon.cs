@@ -13,9 +13,7 @@ public class Polygon
     {
         string s = "";
         foreach (var v in vertices)
-        {
             s +=  v + ", ";
-        }
 
         return s;
     }
