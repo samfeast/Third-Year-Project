@@ -5,7 +5,6 @@ public class Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
     public Vector2Int A = a;
     public Vector2Int B = b;
     public Vector2Int C = c;
-    public Direction direction;
     
     public bool ContainsPoint(Vector2Int p)
     {
@@ -25,5 +24,5 @@ public class Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
     }
 
     // Always print triangle vertices in CCW order
-    public override string ToString() => direction == Direction.CCW ? $"<{A}, {B}, {C}>" : $"<{C}, {B}, {A}>";
+    public override string ToString() => $"<{A}, {B}, {C}>";
 }

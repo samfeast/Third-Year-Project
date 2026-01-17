@@ -18,6 +18,8 @@ public class EarClippingTriangulator : ITriangulator
         public int maxX;
         public int maxXIndex;
     }
+    
+    // Coordinates should not exceed 2^20 to avoid risk of overflow (equivalent to 1.048km square at 1mm resolution)
     public List<Triangle> Triangulate(Polygon positive, List<Polygon> negatives) 
     {
         // Construct doubly linked list with vertices in CCW order
@@ -122,8 +124,34 @@ public class EarClippingTriangulator : ITriangulator
         // Get the vertex of the polygon with the largest x coordinate (the origin of the raycast)
         Vector2Int M = holeInfo.hole.vertices[holeInfo.maxXIndex];
         Console.WriteLine($"M = {M}");
+        
+        var (nearestIntersectionX, nearestT, edgeStart) = FindNearestIntersection(outerVertices, M);
+        var edgeEnd = (edgeStart.Next ?? outerVertices.First)!;
 
+        // If T = 0 or T = 1 the ray hit a vertex exactly
+        if (nearestT.IsZero || nearestT.IsOne)
+        {
+            LinkedListNode<Vector2Int> mutuallyVisibleVertex;
+            // FindNearestIntersection() ignores horizontal edges, so we know the vertices at each end of the edge have
+            // different y coordinates - this makes it safe to check this way
+            if (M.Y == edgeStart.Value.Y) mutuallyVisibleVertex = edgeStart;
+            if (M.Y == edgeEnd.Value.Y) mutuallyVisibleVertex = edgeEnd;
+            
+            
+
+        }
+        
+    }
+
+    // Finds where a ray cast in the +ve x direction from M intersects with the polygon defined by outervertices
+    // Returns the x coordinate of the intersection and t value from parametric equation, both as LongFraction's
+    // Also returns the node where the edge starts (the edge ends at the next node in the linked list)
+    private static (LongFraction, LongFraction, LinkedListNode<Vector2Int>) FindNearestIntersection(
+        LinkedList<Vector2Int> outerVertices, Vector2Int M)
+    {
         var nearestIntersectionX = new LongFraction(1, 0);
+        var nearestT = new LongFraction(1, 0);
+        LinkedListNode<Vector2Int> edgeStart = outerVertices.First!;
         
         var node = outerVertices.First;
         while (node != null)
@@ -150,6 +178,8 @@ public class EarClippingTriangulator : ITriangulator
                 continue;
             }
 
+            // Safe approach to checking if the candidate intersection is closer to the ray origin than the current
+            // closest intersection. Avoids floating point values.
             long candidateIxNumerator = A.X * (B.Y - A.Y) + (M.Y - A.Y) * (B.X - A.X);
             long candidateIxDenominator = B.Y - A.Y;
             var candidateIntersectionX = new LongFraction(candidateIxNumerator, candidateIxDenominator);
@@ -157,11 +187,15 @@ public class EarClippingTriangulator : ITriangulator
             if (candidateIntersectionX < nearestIntersectionX)
             {
                 nearestIntersectionX = candidateIntersectionX;
+                edgeStart = node;
+                nearestT = new LongFraction(M.Y - A.Y, B.Y - A.Y);
                 Console.WriteLine($"{A}-{B} intersects ray at X={nearestIntersectionX.Compute()} (new nearest)");
             }
             
             node = node.Next;
         }
+        
+        return (nearestIntersectionX, nearestT, edgeStart);
     }
 
     private static bool IsValidEdge(Vector2Int M, Vector2Int A, Vector2Int B)
