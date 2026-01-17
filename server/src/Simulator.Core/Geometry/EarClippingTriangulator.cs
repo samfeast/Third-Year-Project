@@ -73,7 +73,9 @@ public class EarClippingTriangulator : ITriangulator
 
         foreach (var hole in holes)
         {
-            FindMutuallyVisibleVertex(vertices, hole);
+            var visibleVertex = FindMutuallyVisibleVertex(vertices, hole);
+
+            vertices = SpliceVertices(vertices, visibleVertex, hole);
         }
 
         return vertices;
@@ -261,6 +263,24 @@ public class EarClippingTriangulator : ITriangulator
         }
         
         return minAngleVertex;
+    }
+
+    private static LinkedList<Vector2Int> SpliceVertices(LinkedList<Vector2Int> vertices,
+        LinkedListNode<Vector2Int> visibleVertex, HoleInfo holeInfo)
+    {
+        List<Vector2Int> holeVertices = holeInfo.hole.vertices;
+        int numHoleVertices = holeVertices.Count;
+        LinkedListNode<Vector2Int> lastVertex = visibleVertex;
+        // <= because we want to include M twice to close the loop
+        for (int i = 0; i <= numHoleVertices; i++)
+        {
+            Vector2Int vertex = holeVertices[(holeInfo.maxXIndex + i) % numHoleVertices];
+            lastVertex = vertices.AddAfter(lastVertex, vertex);
+        }
+        
+        vertices.AddAfter(lastVertex, visibleVertex.Value);
+
+        return vertices;
     }
     
     // Group all vertices into the convex and reflex sets
