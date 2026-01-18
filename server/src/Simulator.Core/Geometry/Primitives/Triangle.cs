@@ -1,10 +1,21 @@
 namespace Simulator.Core.Geometry.Primitives;
 
-public class Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
+public class Triangle
 {
-    public Vector2Int A = a;
-    public Vector2Int B = b;
-    public Vector2Int C = c;
+    public Vector2Int A;
+    public Vector2Int B;
+    public Vector2Int C;
+
+    // Always store triangle with CCW winding
+    public Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
+    {
+        if (Sign(a, b, c) < 0)
+            (b, c) = (c, b);
+
+        A = a;
+        B = b;
+        C = c;
+    }
     
     public bool ContainsPoint(Vector2Int p)
     {
@@ -22,7 +33,6 @@ public class Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
     {
         return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);
     }
-
-    // Always print triangle vertices in CCW order
+    
     public override string ToString() => $"<{A}, {B}, {C}>";
 }

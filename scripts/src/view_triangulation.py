@@ -23,6 +23,9 @@ def main():
             parsed_vertices_x.append(int(row[0]))
             parsed_vertices_y.append(int(row[1]))
 
+    polygons_x.append(parsed_vertices_x)
+    polygons_y.append(parsed_vertices_y)
+
     plot_polygon(polygons_x[0], polygons_y[0], "grey")
     for i in range(1, len(polygons_x)):
         plot_polygon(polygons_x[i], polygons_y[i], "white")
