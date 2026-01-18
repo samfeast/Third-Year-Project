@@ -110,7 +110,7 @@ public readonly struct LongFraction : IEquatable<LongFraction>
 
     // Evaluate all infinities to positive infinity
     // Generally avoid this as it defeats the point in a rational datatype
-    public double Compute()
+    public double Evaluate()
     {
         if (IsInfinity) return double.PositiveInfinity;
         

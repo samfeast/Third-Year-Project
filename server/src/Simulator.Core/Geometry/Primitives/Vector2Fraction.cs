@@ -16,6 +16,8 @@ public readonly struct Vector2Fraction(LongFraction x, LongFraction y) : IEquata
     public override bool Equals(object? obj) => obj is Vector2Fraction other && Equals(other);
     
     public override int GetHashCode() => HashCode.Combine(X, Y);
-
+    
+    public Vector2 Evaluate() =>  new(X.Evaluate(), Y.Evaluate());
+    
     public override string ToString() => $"({X}, {Y})";
 }

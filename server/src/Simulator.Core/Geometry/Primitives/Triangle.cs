@@ -35,6 +35,13 @@ public class Triangle
     {
         return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);
     }
+
+    public Vector2Fraction GetCentroid()
+    {
+        var x = new LongFraction(A.X + B.X + C.X, 3);
+        var y = new LongFraction(A.Y + B.Y + C.Y, 3);
+        return new Vector2Fraction(x, y);
+    }
     
     public override string ToString() => $"<{A}, {B}, {C}>";
 }

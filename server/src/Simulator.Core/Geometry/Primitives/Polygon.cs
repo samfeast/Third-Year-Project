@@ -16,7 +16,7 @@ public class Polygon
 
     public override string ToString()
     {
-        string s = "";
+        var s = "";
         foreach (var v in vertices)
             s +=  v + ", ";
 

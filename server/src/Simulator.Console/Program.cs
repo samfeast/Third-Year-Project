@@ -34,22 +34,20 @@ public class Program
         
         var generator = new NavMeshGenerator();
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        var triangles = generator.GenerateNavMesh(positive, negatives);
+        var navMesh = generator.GenerateNavMesh(positive, negatives);
         watch.Stop();
 
         if (useFileIo)
         {
             string outPath = args[1];
-            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles in {watch.ElapsedMilliseconds}ms and saved to disk");
-            GeometryFileIo.WriteTrianglesToFile(outPath, triangles);
+            System.Console.WriteLine($"Geometry divided into {navMesh.Count} NavMesh nodes in {watch.ElapsedMilliseconds}ms and saved to disk");
+            System.Console.WriteLine(navMesh);
+            //GeometryFileIo.WriteTrianglesToFile(outPath, triangles);
         }
         else
         {
-            System.Console.WriteLine($"Geometry divided into {triangles.Count} triangles in {watch.ElapsedMilliseconds}ms");
-            foreach (var triangle in triangles)
-            {
-                System.Console.WriteLine(triangle);
-            }
+            System.Console.WriteLine($"Geometry divided into {navMesh.Count} NavMesh nodes in {watch.ElapsedMilliseconds}ms");
+            System.Console.WriteLine(navMesh);
         }
     }
 }

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Simulator.Core.Geometry.Primitives;
 
 // Type to represent point in 2D space
@@ -19,6 +21,14 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
     public override bool Equals(object? obj) => obj is Vector2 other && Equals(other);
     
     public override int GetHashCode() => HashCode.Combine(X, Y);
+
+    public Vector2 Round(int places)
+    {
+        if (places < 0)
+            places = 0;
+        
+        return new Vector2(Math.Round(X, places), Math.Round(Y, places));
+    }
 
     public override string ToString() => $"({X}, {Y})";
 }
