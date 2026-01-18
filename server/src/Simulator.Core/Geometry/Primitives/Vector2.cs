@@ -1,11 +1,11 @@
 namespace Simulator.Core.Geometry.Primitives;
 
-public readonly struct Vector2(int x, int y) : IEquatable<Vector2>
+public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
 {
     private const double Epsilon = 1e-9;
     
-    public int X { get; } = x;
-    public int Y { get; } = y;
+    public double X { get; } = x;
+    public double Y { get; } = y;
     
     public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
     public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
