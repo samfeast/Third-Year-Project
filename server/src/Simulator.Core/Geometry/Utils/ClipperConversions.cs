@@ -3,8 +3,10 @@ using Simulator.Core.Geometry.Primitives;
 
 namespace Simulator.Core.Geometry.Utils;
 
-public class ClipperConversions
+// Utility methods to and from types used by the Clipper2 library
+public static class ClipperConversions
 {
+    // Convert a linked list of Vector2Int's to a Clipper2 Path64
     public static Path64 LinkedListToPath64(LinkedList<Vector2Int> vertices)
     {
         List<Point64> listPoint64 = [];
@@ -15,9 +17,10 @@ public class ClipperConversions
             node = node.Next;
         }
         return new Path64(listPoint64);
-
     }
 
+    // Convert a Paths64 object to a list of triangles
+    // Coordinates of points on a Path64 are long, but Vector2Int takes int - risk of overflow
     public static List<Triangle> Paths64ToTriangles(Paths64 paths)
     {
         List<Triangle> triangles = [];

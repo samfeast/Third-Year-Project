@@ -4,12 +4,13 @@ namespace Simulator.Core.Geometry;
 
 public class NavMeshGenerator
 {
-
-    private const bool USE_CDT = true;
+    private readonly bool _useCdt = true;
+    
     public List<Triangle> GenerateNavMesh(Polygon positive, List<Polygon> negatives)
     {
+        // Toggle between CDT (from Clipper2) or ear clipping (own implementation)
         ITriangulator triangulator;
-        if (USE_CDT)
+        if (_useCdt)
             triangulator = new ConstrainedDelaunayTriangulator();
         else
             triangulator = new EarClippingTriangulator();

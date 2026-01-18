@@ -3,6 +3,7 @@ using Simulator.Core.Geometry.Primitives;
 
 namespace Simulator.Core.Geometry.Utils;
 
+// This class exposes BuildVertexList() which forms a pseudosimple polygon which accounts for holes in the outer polygon
 public static class PolygonBuilder
 {
     private struct HoleInfo
@@ -13,11 +14,9 @@ public static class PolygonBuilder
         public int maxXIndex;
     }
     
-    // Take list of input polygons and return correctly ordered vertex list
+    // Take list of input polygons and return correctly ordered linked list of vertices
     public static LinkedList<Vector2Int> BuildVertexList(Polygon positive, List<Polygon> negatives)
     {
-        var vertices = new LinkedList<Vector2Int>();
-
         List<HoleInfo> holes = BuildHoleInfo(negatives);
         
         // Sort negative polygons with the rightmost polygon first
@@ -28,26 +27,24 @@ public static class PolygonBuilder
             if (cmp != 0) return cmp;
             return a.holeIndex.CompareTo(b.holeIndex);
         });
-        
-        foreach (var vertex in positive.vertices)
-        {
-            vertices.AddLast(vertex);
-        }
 
+        // Begin with the vertices of the outer polygon
+        LinkedList<Vector2Int> vertices = new(positive.vertices);
+        
+        // For each hole in the geometry, find a mutually visible vertex and splice the hole into the vertex list
         foreach (var hole in holes)
         {
             var visibleVertex = FindMutuallyVisibleVertex(vertices, hole);
-
             vertices = SpliceVertices(vertices, visibleVertex, hole);
         }
-
+        
         return vertices;
     }
     
+    // Go through each hole and find the index and value of the vertex with greatest X value
     private static List<HoleInfo> BuildHoleInfo(List<Polygon> holes)
     {
-        List<HoleInfo> holeInfo = new();
-        // Go through each hole and calculate the index and value of the vertex with greatest X value
+        List<HoleInfo> holeInfo = [];
         for (int i = 0; i < holes.Count; i++)
         {
             var (maxX, maxIndex) = GetMaxX(holes[i].vertices);
@@ -69,7 +66,6 @@ public static class PolygonBuilder
     {
         int maxX = vertices[0].X;
         int maxIndex = 0;
-        
         for (int i = 1; i < vertices.Count; i++)
         {
             int x = vertices[i].X;
@@ -83,13 +79,16 @@ public static class PolygonBuilder
         return (maxX, maxIndex);
     }
     
-    private static LinkedListNode<Vector2Int> FindMutuallyVisibleVertex(LinkedList<Vector2Int> outerVertices, HoleInfo holeInfo)
+    // Find the vertex on the outer polygon which can be bridged to the hole
+    // Safe from floating point errors by using rational fractions and never computing division
+    private static LinkedListNode<Vector2Int> FindMutuallyVisibleVertex(LinkedList<Vector2Int> outerVertices, 
+        HoleInfo holeInfo)
     {
         Debug.Assert(outerVertices.Count > 0, "No outer vertices to check for visibility");
         // Get the vertex of the polygon with the largest x coordinate (the origin of the raycast)
         Vector2Int M = holeInfo.hole.vertices[holeInfo.maxXIndex];
-        Console.WriteLine($"M = {M}");
         
+        // Find where the ray intersects the outer polygon
         var (nearestIntersectionX, nearestT, edgeStart) = FindNearestIntersection(outerVertices, M);
         var edgeEnd = (edgeStart.Next ?? outerVertices.First)!;
 
@@ -109,20 +108,21 @@ public static class PolygonBuilder
 
         var testRegion = new TriangleFraction(M.ToVector2Fraction(), I, P.Value.ToVector2Fraction());
 
-        // Find any vertices in the test region. If there aren't any, P is mutually visible
+        // Find any vertices in the test region. If there aren't any, P is mutually visible so can be returned
         var obstructingVertices = GetObstructingVertices(outerVertices, testRegion);
         if (obstructingVertices.Count == 0) return P;
         
-        // Otherwise return the obstructing vertex with the minimum angle to the vector MI
+        // Otherwise return the obstructing vertex with the minimum angle to the vector MI, which is mutually visible
         return FindMinimumAngleVertex(obstructingVertices, M);
     }
     
-    // Finds where a ray cast in the +ve x direction from M intersects with the polygon defined by outervertices
+    // Finds where a ray cast in the +ve x direction from M intersects with the outer polygon
     // Returns the x coordinate of the intersection and t value from parametric equation, both as LongFraction's
     // Also returns the node where the edge starts (the edge ends at the next node in the linked list)
     private static (LongFraction, LongFraction, LinkedListNode<Vector2Int>) FindNearestIntersection(
         LinkedList<Vector2Int> outerVertices, Vector2Int M)
     {
+        // Initialise LongFraction's
         var nearestIntersectionX = new LongFraction(1, 0);
         var nearestT = new LongFraction(1, 0);
         LinkedListNode<Vector2Int> edgeStart = outerVertices.First!;
@@ -130,9 +130,11 @@ public static class PolygonBuilder
         var node = outerVertices.First;
         while (node != null)
         {
+            // Get the points at either end of the candidate edge
             var A = node.Value;
             var B = (node.Next ?? outerVertices.First)!.Value;
 
+            // Check criteria for excluding the edge
             if (!IsValidEdge(M, A, B))
             {
                 node = node.Next;
@@ -158,12 +160,12 @@ public static class PolygonBuilder
             long candidateIxDenominator = B.Y - A.Y;
             var candidateIntersectionX = new LongFraction(candidateIxNumerator, candidateIxDenominator);
 
+            // If the candidate intersection is closer to M than the previously stored intersection, update it
             if (candidateIntersectionX < nearestIntersectionX)
             {
                 nearestIntersectionX = candidateIntersectionX;
                 edgeStart = node;
                 nearestT = new LongFraction(M.Y - A.Y, B.Y - A.Y);
-                Console.WriteLine($"{A}-{B} intersects ray at X={nearestIntersectionX.Compute()} (new nearest)");
             }
             
             node = node.Next;
@@ -172,12 +174,13 @@ public static class PolygonBuilder
         return (nearestIntersectionX, nearestT, edgeStart);
     }
     
+    // An edge is not valid if it's horizontal, entirely above or below the ray, or exterior to the ray
     private static bool IsValidEdge(Vector2Int M, Vector2Int A, Vector2Int B)
     {
         if (A.Y == B.Y) return false; // Horizontal edges are not valid
         if (Math.Min(A.Y, B.Y) > M.Y || 
             Math.Max(A.Y, B.Y) <= M.Y) return false; // Edges entirely above or below the ray are not valid
-        if (Cross(B - A, M - A) <= 0) return false; // Edges exterior to ray are not valid
+        if (Cross(B - A, M - A) <= 0) return false; // Edges exterior to ray are invalid (avoids double counting bridge)
 
         return true;
     }
@@ -188,13 +191,17 @@ public static class PolygonBuilder
         return a.X * b.Y - a.Y * b.X;
     }
     
-    private static List<LinkedListNode<Vector2Int>> GetObstructingVertices(LinkedList<Vector2Int> outerVertices, TriangleFraction testRegion)
+    // Get all the outer vertices which lie inside the test region (or on one of the edges of the test region)
+    private static List<LinkedListNode<Vector2Int>> GetObstructingVertices(LinkedList<Vector2Int> outerVertices, 
+        TriangleFraction testRegion)
     {
-        var obstructingVertices = new List<LinkedListNode<Vector2Int>>();
+        List<LinkedListNode<Vector2Int>> obstructingVertices = [];
         
         var node = outerVertices.First;
         while (node != null)
         {
+            // Optimisation opportunity: don't necessarily need to recompute convexity for all vertices every time we
+            // call GetObstructingVertices
             var prevNode = node.Previous ?? outerVertices.Last!;
             var nextNode = node.Next ?? outerVertices.First!;
             // Only need to check if reflex vertices are obstructing
@@ -214,20 +221,24 @@ public static class PolygonBuilder
         return obstructingVertices;
     }
     
+    // Use the cross product to determine if vertex curr is convex (given its neighbours)
     private static bool IsConvex(Vector2Int prev, Vector2Int curr, Vector2Int next)
     {
         return Cross(curr - prev, next - curr) > 0;
     }
 
-    private static LinkedListNode<Vector2Int> FindMinimumAngleVertex(List<LinkedListNode<Vector2Int>> vertices, Vector2Int M)
+    // Given a set of candidate vertices, find the one which minimises the angle to MI (which is +ve X axis)
+    private static LinkedListNode<Vector2Int> FindMinimumAngleVertex(List<LinkedListNode<Vector2Int>> vertices, 
+        Vector2Int M)
     {
         var minScore = new LongFraction(0, 1);
         var minAngleVertex = vertices[0];
         foreach (var vertex in vertices)
         {
+            // Convoluted score formula to avoid division - derived from (A.B)/(|A|*|B|)
             var numerator = (long)(vertex.Value.X - M.X) * (vertex.Value.X - M.X);
             var denominator = numerator + vertex.Value.Y * vertex.Value.Y;
-
+            
             var score = new LongFraction(numerator, denominator);
             if (score < minScore)
             {
@@ -239,12 +250,14 @@ public static class PolygonBuilder
         return minAngleVertex;
     }
     
+    // Form bridge vertices and splice the whole into the vertex list
     private static LinkedList<Vector2Int> SpliceVertices(LinkedList<Vector2Int> vertices,
         LinkedListNode<Vector2Int> visibleVertex, HoleInfo holeInfo)
     {
         List<Vector2Int> holeVertices = holeInfo.hole.vertices;
         int numHoleVertices = holeVertices.Count;
         LinkedListNode<Vector2Int> lastVertex = visibleVertex;
+        // Add all the hole vertices after the visible vertex
         // <= because we want to include M twice to close the loop
         for (int i = 0; i <= numHoleVertices; i++)
         {
@@ -252,6 +265,7 @@ public static class PolygonBuilder
             lastVertex = vertices.AddAfter(lastVertex, vertex);
         }
         
+        // Add the visible vertex back to from the bridge in the other direction
         vertices.AddAfter(lastVertex, visibleVertex.Value);
 
         return vertices;

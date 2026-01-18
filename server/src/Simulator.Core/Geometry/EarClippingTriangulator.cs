@@ -4,6 +4,7 @@ using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Core.Geometry;
 
+// Implementation of ITriangulator which triangulates geometry using ear clipping algorithm
 public class EarClippingTriangulator : ITriangulator
 {
 
@@ -12,7 +13,6 @@ public class EarClippingTriangulator : ITriangulator
     private HashSet<LinkedListNode<Vector2Int>> _reflexVertices = [];
     private HashSet<LinkedListNode<Vector2Int>> _earVertices = [];
     
-    // Coordinates should not exceed 2^20 to avoid risk of overflow (equivalent to 1.048km square at 1mm resolution)
     public List<Triangle> Triangulate(Polygon positive, List<Polygon> negatives)
     {
         _vertices = PolygonBuilder.BuildVertexList(positive, negatives);
@@ -23,11 +23,11 @@ public class EarClippingTriangulator : ITriangulator
         if (_vertices.Count == 3)
             return [ GetLastTriangle() ];
         
+        // Classify all vertices as convex or reflex and find ears
         ClassifyVertices();
         ComputeEars();
         
         List<Triangle> triangles = [];
-        
         // Clipping loop
         while (_vertices.Count > 3)
         {
@@ -70,13 +70,14 @@ public class EarClippingTriangulator : ITriangulator
 
     }
 
+    // Use the cross product to determine if vertex curr is convex (given its neighbours)
     private static bool IsConvex(Vector2Int prev, Vector2Int curr, Vector2Int next)
     {
         return Cross(curr - prev, next - curr) > 0;
     }
     
     // Add ear vertices to the set
-    // NOTE: Only call this when _convexVertices is up to date
+    // Only call this when _convexVertices is up to date
     private void ComputeEars()
     {
         foreach (var node in _convexVertices)
@@ -138,6 +139,7 @@ public class EarClippingTriangulator : ITriangulator
         var prevNode = node.Previous ?? _vertices.Last;
         var nextNode = node.Next ?? _vertices.First;
 
+        // We know prev and next are not null as this is checked by the assertion
         return (prevNode!, nextNode!);
     }
     
@@ -149,7 +151,7 @@ public class EarClippingTriangulator : ITriangulator
         return new Triangle(_vertices.First!.Value, _vertices.First.Next!.Value, _vertices.Last!.Value);
     }
     
-    // 2D cross product to determine convexity or whether a v2 lies to the left or right of directed edge v0->v1
+    // 2D cross product used to determine convexity
     private static int Cross(Vector2Int a, Vector2Int b)
     {
         return a.X * b.Y - a.Y * b.X;
