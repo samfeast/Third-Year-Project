@@ -9,6 +9,11 @@ public class Polygon
         vertices = [];
     }
 
+    public Polygon(List<Vector2Int> v)
+    {
+        vertices = v;
+    }
+
     public override string ToString()
     {
         string s = "";

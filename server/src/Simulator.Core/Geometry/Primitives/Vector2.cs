@@ -1,5 +1,6 @@
 namespace Simulator.Core.Geometry.Primitives;
 
+// Type to represent point in 2D space
 public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
 {
     private const double Epsilon = 1e-9;
@@ -13,6 +14,7 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
     public static bool operator ==(Vector2 a, Vector2 b) => a.Equals(b);
     public static bool operator !=(Vector2 a, Vector2 b) => !a.Equals(b);
 
+    // Epsilon to avoid floating point errors
     public bool Equals(Vector2 other) => Math.Abs(X - other.X) < Epsilon && Math.Abs(Y - other.Y) < Epsilon;
     public override bool Equals(object? obj) => obj is Vector2 other && Equals(other);
     

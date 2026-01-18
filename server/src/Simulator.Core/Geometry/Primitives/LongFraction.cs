@@ -1,9 +1,9 @@
 namespace Simulator.Core.Geometry.Primitives;
 
-// Struct to represent a fraction without precision issues
+// Struct to represent a fraction with integer numerator and denominator
 // This struct does not differentiate between +ve and -ve infinities
 // All infinities are equal, infinity is larger than all fractions (i.e. even (-2)/0 > 1/2)
-// Not protected against overflow - avoid numerators and denominators exceeding ~2^20 for safety
+// There is no protection against overflow. Avoid numerators and denominators exceeding ~2^20 for safety
 public readonly struct LongFraction : IEquatable<LongFraction>
 {
     private readonly long _numerator;
@@ -11,12 +11,14 @@ public readonly struct LongFraction : IEquatable<LongFraction>
 
     public LongFraction(long num, long den)
     {
+        // Normalise fraction to ensure denominator is always positive
         if (den < 0)
         {
             num = -num;
             den = -den;
         }
 
+        // Simplify fraction
         long gcd = Gcd(Math.Abs(num), den);
         _numerator = num / gcd;
         _denominator = den / gcd;
@@ -27,7 +29,7 @@ public readonly struct LongFraction : IEquatable<LongFraction>
     public bool IsZero => !IsInfinity && _numerator == 0;
     public bool IsOne => !IsInfinity && _numerator == _denominator;
     
-    // Infinities not considered either positive or negative
+    // Infinity not considered either positive or negative
     // 0 considered positive
     public bool IsPositive()
     {
@@ -107,6 +109,7 @@ public readonly struct LongFraction : IEquatable<LongFraction>
     }
 
     // Evaluate all infinities to positive infinity
+    // Generally avoid this as it defeats the point in a rational datatype
     public double Compute()
     {
         if (IsInfinity) return double.PositiveInfinity;

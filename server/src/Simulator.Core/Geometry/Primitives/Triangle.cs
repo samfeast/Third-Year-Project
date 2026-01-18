@@ -1,12 +1,13 @@
 namespace Simulator.Core.Geometry.Primitives;
 
+// Representation of a triangle defined by three points on an integer grid
 public class Triangle
 {
     public Vector2Int A;
     public Vector2Int B;
     public Vector2Int C;
 
-    // Always store triangle with CCW winding
+    // Always store triangle with CCW winding for consistency
     public Triangle(Vector2Int a, Vector2Int b, Vector2Int c)
     {
         if (Sign(a, b, c) < 0)
@@ -17,6 +18,7 @@ public class Triangle
         C = c;
     }
     
+    // Returns true if p is inside the triangle or on one of the edges, false otherwise
     public bool ContainsPoint(Vector2Int p)
     {
         var d1 = Sign(p, A, B);
@@ -29,7 +31,7 @@ public class Triangle
         return !(hasNeg && hasPos);
     }
 
-    private int Sign(Vector2Int v0, Vector2Int v1, Vector2Int v2)
+    private static int Sign(Vector2Int v0, Vector2Int v1, Vector2Int v2)
     {
         return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);
     }

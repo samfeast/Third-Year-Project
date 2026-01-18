@@ -1,5 +1,6 @@
 namespace Simulator.Core.Geometry.Primitives;
 
+// Type to represent point in 2D space, with values stored as rational fractions
 public readonly struct Vector2Fraction(LongFraction x, LongFraction y) : IEquatable<Vector2Fraction>
 {
     public LongFraction X { get; } = x;
@@ -17,6 +18,4 @@ public readonly struct Vector2Fraction(LongFraction x, LongFraction y) : IEquata
     public override int GetHashCode() => HashCode.Combine(X, Y);
 
     public override string ToString() => $"({X}, {Y})";
-    
-    public LongFraction Dot(Vector2Fraction other) => X * other.X + Y * other.Y;
 }

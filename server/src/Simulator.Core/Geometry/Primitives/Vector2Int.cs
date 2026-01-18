@@ -1,5 +1,6 @@
 namespace Simulator.Core.Geometry.Primitives;
 
+// Type to represent point on an integer grid
 public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
 {
     public int X { get; } = x;
@@ -18,8 +19,7 @@ public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
     
     public override string ToString() => $"({X}, {Y})";
     
-    public int Dot(Vector2Int other) => X * other.X + Y * other.Y;
-    
+    // Convert to a Vector2Fraction: (X/1,Y/1)
     public Vector2Fraction ToVector2Fraction()
     {
         var x = new LongFraction(X, 1);

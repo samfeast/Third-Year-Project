@@ -14,10 +14,7 @@ public static class GeometryFileIo
             // An empty row signifies the end of one polygon and the start of the next
             if (string.IsNullOrWhiteSpace(line) && parsedVertices.Count > 0)
             {
-                polygons.Add(new Polygon
-                {
-                    vertices = new List<Vector2Int>(parsedVertices)
-                });
+                polygons.Add(new Polygon(parsedVertices));
                 parsedVertices.Clear();
                 continue;
             }
@@ -37,12 +34,7 @@ public static class GeometryFileIo
         }
 
         if (parsedVertices.Count > 0)
-        {
-            polygons.Add(new Polygon
-            {
-                vertices = new List<Vector2Int>(parsedVertices)
-            });
-        }
+            polygons.Add(new Polygon(parsedVertices));
         
         return polygons;
     }
