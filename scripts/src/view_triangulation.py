@@ -43,6 +43,7 @@ def main():
     plot_lines(lines)
 
     plt.axis("off")
+    plt.gca().set_aspect("equal", adjustable="box")
     plt.savefig("../output/triangulation.png", dpi=300)
 
 
