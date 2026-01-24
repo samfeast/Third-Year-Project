@@ -35,8 +35,36 @@ public class JsonGeometryDeserialiser : IDeserialiser<InputGeometry>
         };
     }
     
+    /* Format:
+     * {
+     *    "positive": [[x1,y1],[x2,y2],...],
+     *    "negatives": [
+     *       [[x3,y3],[x4,y4],...],
+     *       [[x5,y5],[x6,y6],...],
+     *       ...
+     *    ]
+     * }
+     */
     private InputGeometry DeserialiseV1(JsonElement root)
     {
-        return new InputGeometry();
+        List<Vector2Int> positiveVertices = [];
+        foreach (var v in root.GetProperty("positive").EnumerateArray())
+        {
+            positiveVertices.Add(new Vector2Int(v[0].GetInt32(), v[1].GetInt32()));
+        }
+        var positive = new Polygon(positiveVertices);
+        
+        List<Polygon> negatives = [];
+        foreach (var negative in root.GetProperty("negatives").EnumerateArray())
+        {
+            List<Vector2Int> negativeVertices = [];
+            foreach (var v in negative.EnumerateArray())
+            {
+                negativeVertices.Add(new Vector2Int(v[0].GetInt32(), v[1].GetInt32()));
+            }
+            negatives.Add(new Polygon(negativeVertices));
+        }
+        
+        return new InputGeometry(positive, negatives);
     }
 }

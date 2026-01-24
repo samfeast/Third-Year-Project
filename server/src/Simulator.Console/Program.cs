@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Simulator.Core;
+using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.IO;
 
@@ -25,8 +26,9 @@ public class Program
         watch.Stop();
         Debug.Assert(setupSuccess, "Simulation Setup Failed");
         
-        var writeRegistry = SerialiserRegistryFactory.Default<InputGeometry>();
-        var writeSuccess = writeRegistry.Save(outPath, new InputGeometry(), 1);
+        // Save the navmesh using whichever serialiser works
+        var writeRegistry = SerialiserRegistryFactory.Default<NavMesh>();
+        var writeSuccess = writeRegistry.Save(outPath, simulator.Mesh!, 1);
         Debug.Assert(writeSuccess, "Failed to write input geometry");
     }
 }

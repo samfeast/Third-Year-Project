@@ -23,8 +23,25 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
         };
     }
     
+    /* Format:
+     * {
+     *    "positive": [[x1,y1],[x2,y2],...],
+     *    "negatives": [
+     *       [[x3,y3],[x4,y4],...],
+     *       [[x5,y5],[x6,y6],...],
+     *       ...
+     *    ]
+     * }
+     */
     private bool SerialiseV1(Stream s, InputGeometry inputGeometry)
     {
+        var positive = inputGeometry.Positive.ToListInt();
+        List<List<int[]>> negatives = [];
+        foreach (var negative in inputGeometry.Negatives)
+            negatives.Add(negative.ToListInt());
+        
+        JsonSerializer.Serialize(s, new {positive, negatives});
+        
         return true;
     }
 }

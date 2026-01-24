@@ -32,7 +32,7 @@ public static class PolygonBuilder
         });
 
         // Begin with the vertices of the outer polygon
-        LinkedList<Vector2Int> vertices = new(positive.vertices);
+        LinkedList<Vector2Int> vertices = new(positive.Vertices);
         
         // For each hole in the geometry, find a mutually visible vertex and splice the hole into the vertex list
         foreach (var hole in holes)
@@ -50,7 +50,7 @@ public static class PolygonBuilder
         List<HoleInfo> holeInfo = [];
         for (int i = 0; i < holes.Count; i++)
         {
-            var (maxX, maxIndex) = GetMaxX(holes[i].vertices);
+            var (maxX, maxIndex) = GetMaxX(holes[i].Vertices);
 
             holeInfo.Add(new HoleInfo
             {
@@ -89,7 +89,7 @@ public static class PolygonBuilder
     {
         Debug.Assert(outerVertices.Count > 0, "No outer vertices to check for visibility");
         // Get the vertex of the polygon with the largest x coordinate (the origin of the raycast)
-        Vector2Int M = holeInfo.hole.vertices[holeInfo.maxXIndex];
+        Vector2Int M = holeInfo.hole.Vertices[holeInfo.maxXIndex];
         
         // Find where the ray intersects the outer polygon
         var (nearestIntersectionX, nearestT, edgeStart) = FindNearestIntersection(outerVertices, M);
@@ -257,7 +257,7 @@ public static class PolygonBuilder
     private static LinkedList<Vector2Int> SpliceVertices(LinkedList<Vector2Int> vertices,
         LinkedListNode<Vector2Int> visibleVertex, HoleInfo holeInfo)
     {
-        List<Vector2Int> holeVertices = holeInfo.hole.vertices;
+        List<Vector2Int> holeVertices = holeInfo.hole.Vertices;
         int numHoleVertices = holeVertices.Count;
         LinkedListNode<Vector2Int> lastVertex = visibleVertex;
         // Add all the hole vertices after the visible vertex
