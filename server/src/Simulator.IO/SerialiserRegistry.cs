@@ -43,6 +43,11 @@ public static class SerialiserRegistryFactory
         {
             return new SerialiserRegistry<T>([
                 (ISerialiser<T>) new JsonGeometrySerialiser(),
+            ]);
+        }
+        if (typeof(T) == typeof(NavMesh))
+        {
+            return new SerialiserRegistry<T>([
                 (ISerialiser<T>) new JsonMeshSerialiser()
             ]);
         }

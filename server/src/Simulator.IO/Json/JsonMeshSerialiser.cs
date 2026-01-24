@@ -25,6 +25,8 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
     
     /* Format:
      * {
+     *    "type": "mesh",
+     *    "version": 1,
      *    "triangles": [
      *       [[x1,y1],[x2,y2],[x3,y3]],
      *       [[x4,y4],[x5,y5],[x6,y6]],
@@ -45,7 +47,7 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
             triangles.Add(triangle);
         }
         
-        JsonSerializer.Serialize(s, new {triangles});
+        JsonSerializer.Serialize(s, new {type = "mesh", version = 1, triangles});
         
         return true;
     }

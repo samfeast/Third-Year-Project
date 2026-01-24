@@ -25,6 +25,8 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
     
     /* Format:
      * {
+     *    "type": "geometry",
+     *    "version": 1,
      *    "positive": [[x1,y1],[x2,y2],...],
      *    "negatives": [
      *       [[x3,y3],[x4,y4],...],
@@ -40,7 +42,7 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
         foreach (var negative in inputGeometry.Negatives)
             negatives.Add(negative.ToListInt());
         
-        JsonSerializer.Serialize(s, new {positive, negatives});
+        JsonSerializer.Serialize(s, new {type = "geometry", version = 1, positive, negatives});
         
         return true;
     }

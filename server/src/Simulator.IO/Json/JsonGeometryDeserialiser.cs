@@ -37,6 +37,8 @@ public class JsonGeometryDeserialiser : IDeserialiser<InputGeometry>
     
     /* Format:
      * {
+     *    "type": "geometry",
+     *    "version": 1,
      *    "positive": [[x1,y1],[x2,y2],...],
      *    "negatives": [
      *       [[x3,y3],[x4,y4],...],
