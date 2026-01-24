@@ -4,9 +4,9 @@ using Simulator.IO.Utils;
 
 namespace Simulator.IO;
 
-public class DeserialiserRegistry<T>(IEnumerable<IDeserialiser<T>> deserializers)
+public class DeserialiserRegistry<T>(IEnumerable<IDeserialiser<T>> deserialisers)
 {
-    private readonly List<IDeserialiser<T>> _deserialisers = deserializers.ToList();
+    private readonly List<IDeserialiser<T>> _deserialisers = deserialisers.ToList();
     
     public T Load(string path)
     {
@@ -25,7 +25,7 @@ public class DeserialiserRegistry<T>(IEnumerable<IDeserialiser<T>> deserializers
 
 public static class DeserialiserRegistryFactory
 {
-    // Get a deserialiser registry containing all the deserialisers of type T
+    // Get a DeserialiserRegistry containing all the deserialisers of type T
     public static DeserialiserRegistry<T> Default<T>()
     {
         if (typeof(T) == typeof(InputGeometry))
@@ -35,6 +35,6 @@ public static class DeserialiserRegistryFactory
             ]);
         }
 
-        throw new NotSupportedException($"No default registry for type {typeof(T).Name}");
+        throw new NotSupportedException($"No default deserialiser registry for type {typeof(T).Name}");
     }
 }

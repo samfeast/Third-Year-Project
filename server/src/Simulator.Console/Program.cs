@@ -14,18 +14,20 @@ public class Program
         string outPath = args[1];
 
         // Get a registry with all the deserialisers which can parse InputGeometry
-        var registry = DeserialiserRegistryFactory.Default<InputGeometry>();
+        var readRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
 
         // Load the input geometry using whichever deserialiser works
-        var inputGeometry = registry.Load(inPath);
+        var inputGeometry = readRegistry.Load(inPath);
 
         var simulator = new SimulationEngine();
         var watch = Stopwatch.StartNew();
         var setupSuccess = simulator.SetupSimulation(inputGeometry);
         watch.Stop();
         Debug.Assert(setupSuccess, "Simulation Setup Failed");
-
-        // Select a serialiser and write to file
+        
+        var writeRegistry = SerialiserRegistryFactory.Default<InputGeometry>();
+        var writeSuccess = writeRegistry.Save(outPath, new InputGeometry(), 1);
+        Debug.Assert(writeSuccess, "Failed to write input geometry");
     }
 }
 
