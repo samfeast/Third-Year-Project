@@ -6,15 +6,13 @@ namespace Simulator.Core.Geometry.Utils;
 // Utility methods to and from types used by the Clipper2 library
 public static class ClipperConversions
 {
-    // Convert a linked list of Vector2Int's to a Clipper2 Path64
-    public static Path64 LinkedListToPath64(LinkedList<Vector2Int> vertices)
+    // Convert a list of Vector2Int's to a Clipper2 Path64
+    public static Path64 ListToPath64(List<Vector2Int> vertices)
     {
         List<Point64> listPoint64 = [];
-        var node = vertices.First;
-        while (node != null)
+        foreach (var v in vertices)
         {
-            listPoint64.Add(new Point64(node.Value.X, node.Value.Y));
-            node = node.Next;
+            listPoint64.Add(new Point64(v.X, v.Y));
         }
         return new Path64(listPoint64);
     }
