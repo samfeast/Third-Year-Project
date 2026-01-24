@@ -1,4 +1,6 @@
-﻿using Simulator.Core.Geometry;
+﻿using System.Diagnostics;
+using Simulator.Core;
+using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Geometry.Utils;
 
@@ -9,46 +11,27 @@ public class Program
     static void Main(string[] args)
     {
         // If two args are given (input file, output file), use file IO, otherwise don't
-        bool useFileIo = args.Length == 2;
+        // Expect two arguments: input file path, output file path 
 
-        Polygon positive;
-        List<Polygon> negatives;
-        if (useFileIo)
+        string inPath = args[0];
+        if (!File.Exists(inPath))
         {
-            string inPath = args[0];
-            if (!File.Exists(inPath))
-            {
-                System.Console.WriteLine($"File not found: {inPath}");
-                return;
-            }
-            List<Polygon> polygons = GeometryFileIo.ReadGeometryFromFile(inPath);
-            positive = polygons[0];
-            polygons.RemoveAt(0);
-            negatives = polygons;
+            System.Console.WriteLine($"File not found: {inPath}");
+            return;
         }
-        else
-        {
-            positive = new Polygon();
-            negatives = new List<Polygon>();
-        }
-        
-        var generator = new NavMeshGenerator();
+        List<Polygon> polygons = GeometryFileIo.ReadGeometryFromFile(inPath);
+        Polygon positive = polygons[0];
+        polygons.RemoveAt(0);
+        List<Polygon> negatives = polygons;
+
+
+        var simulator = new SimulationEngine();
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        var navMesh = generator.GenerateNavMesh(positive, negatives);
+        var setupSuccess = simulator.SetupSimulation(positive, negatives);
         watch.Stop();
+        Debug.Assert(setupSuccess, "Simulation Setup Failed");
 
-        if (useFileIo)
-        {
-            string outPath = args[1];
-            System.Console.WriteLine($"Geometry divided into {navMesh.Count} NavMesh nodes in {watch.ElapsedMilliseconds}ms and saved to disk");
-            System.Console.WriteLine(navMesh);
-            //GeometryFileIo.WriteTrianglesToFile(outPath, triangles);
-        }
-        else
-        {
-            System.Console.WriteLine($"Geometry divided into {navMesh.Count} NavMesh nodes in {watch.ElapsedMilliseconds}ms");
-            System.Console.WriteLine(navMesh);
-        }
+        // Select a serialiser and write to file
     }
 }
 
