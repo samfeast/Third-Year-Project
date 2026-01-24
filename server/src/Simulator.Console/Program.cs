@@ -25,11 +25,15 @@ public class Program
         var setupSuccess = simulator.SetupSimulation(inputGeometry);
         watch.Stop();
         Debug.Assert(setupSuccess, "Simulation Setup Failed");
+        if (simulator.Mesh == null)
+        {
+            return;
+        }
+        System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Count} triangles in {watch.ElapsedMilliseconds}ms");
         
         // Save the navmesh using whichever serialiser works
         var writeRegistry = SerialiserRegistryFactory.Default<NavMesh>();
-        var writeSuccess = writeRegistry.Save(outPath, simulator.Mesh!, 1);
+        var writeSuccess = writeRegistry.Save(outPath, simulator.Mesh, 1);
         Debug.Assert(writeSuccess, "Failed to write input geometry");
     }
 }
-
