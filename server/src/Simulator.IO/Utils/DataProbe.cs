@@ -5,16 +5,11 @@ namespace Simulator.IO.Utils;
 // Class that inspects a data stream and tries to determine serialisation type, version, and format
 public class DataProbe
 {
-    public enum DataFormat
-    {
-        JSON
-    }
-    
-    public string? Type { get; }
+    public DataType? Type { get; }
     public int? Version { get; }
     public DataFormat Format { get; }
     
-    private DataProbe(string? type, int? version, DataFormat format)
+    private DataProbe(DataType? type, int? version, DataFormat format)
     {
         Type = type;
         Version = version;
@@ -56,13 +51,16 @@ public class DataProbe
             throw new UnsupportedFormatException("JSON root must be an object.");
 
         // Parse the type and version fields if they are present
-        string? type = null;
+        DataType? type = null;
         int? version = null;
         
         if (root.TryGetProperty("type", out var typeProp) &&
             typeProp.ValueKind == JsonValueKind.String)
         {
-            type = typeProp.GetString();
+            var typeStr = typeProp.GetString();
+            // Parse the type string as an enum
+            if (Enum.TryParse<DataType>(typeStr, ignoreCase: true, out var typeEnum))
+                type = typeEnum;
         }
 
         if (root.TryGetProperty("version", out var versionProp) &&

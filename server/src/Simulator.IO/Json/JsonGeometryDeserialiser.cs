@@ -11,7 +11,7 @@ public class JsonGeometryDeserialiser : IDeserialiser<InputGeometry>
 {
     public bool CanRead(DataProbe probe)
     {
-        return probe is { Format: DataProbe.DataFormat.JSON, Type: "geometry", Version: >= 1 and <= 1 };
+        return probe is { Format: DataFormat.JSON, Type: DataType.Geometry, Version: >= 1 and <= 1 };
     }
 
     public InputGeometry Deserialise(Stream s)
