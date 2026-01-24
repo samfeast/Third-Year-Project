@@ -13,9 +13,9 @@ public class EarClippingTriangulator : ITriangulator
     private HashSet<LinkedListNode<Vector2Int>> _reflexVertices = [];
     private HashSet<LinkedListNode<Vector2Int>> _earVertices = [];
     
-    public List<Triangle> Triangulate(Polygon positive, List<Polygon> negatives)
+    public List<Triangle> Triangulate(InputGeometry inputGeometry)
     {
-        _vertices = PolygonBuilder.BuildVertexList(positive, negatives);
+        _vertices = PolygonBuilder.BuildVertexList(inputGeometry);
 
         // Handle edge cases where a triangle cannot be formed, or only one triangle can be formed
         if (_vertices.Count < 3) 

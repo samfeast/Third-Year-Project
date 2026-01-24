@@ -5,7 +5,7 @@ namespace Simulator.Core.Geometry;
 
 public static class NavMeshGenerator
 {
-    public static NavMesh GenerateNavMesh(Polygon positive, List<Polygon> negatives)
+    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry)
     {
         // Toggle between CDT (from Clipper2) or ear clipping (own implementation)
         const bool useCdt = true;
@@ -15,7 +15,7 @@ public static class NavMeshGenerator
         else
             triangulator = new EarClippingTriangulator();
         
-        List<Triangle> triangles = triangulator.Triangulate(positive, negatives);
+        List<Triangle> triangles = triangulator.Triangulate(inputGeometry);
 
         NavMesh navMesh = ConstructNavMeshObject(triangles);
         

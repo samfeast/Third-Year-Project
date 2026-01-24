@@ -8,10 +8,10 @@ namespace Simulator.Core.Geometry;
 // Implementation of ITriangulator which uses the Clipper2 library
 public class ConstrainedDelaunayTriangulator : ITriangulator
 {
-    public List<Triangle> Triangulate(Polygon positive, List<Polygon> negatives)
+    public List<Triangle> Triangulate(InputGeometry inputGeometry)
     {
         // Build the pseudosimple polygon to incorporate holes
-        var vertices = PolygonBuilder.BuildVertexList(positive, negatives);
+        var vertices = PolygonBuilder.BuildVertexList(inputGeometry);
 
         // Convert the vertex linkedlist to a Path64 from Clipper2
         var path = ClipperConversions.LinkedListToPath64(vertices);

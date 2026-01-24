@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics;
 using Simulator.Core;
-using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
-using Simulator.Core.Geometry.Utils;
+using Simulator.IO;
 
 namespace Simulator.Console;
 
@@ -10,24 +9,19 @@ public class Program
 {
     static void Main(string[] args)
     {
-        // If two args are given (input file, output file), use file IO, otherwise don't
         // Expect two arguments: input file path, output file path 
-
         string inPath = args[0];
-        if (!File.Exists(inPath))
-        {
-            System.Console.WriteLine($"File not found: {inPath}");
-            return;
-        }
-        List<Polygon> polygons = GeometryFileIo.ReadGeometryFromFile(inPath);
-        Polygon positive = polygons[0];
-        polygons.RemoveAt(0);
-        List<Polygon> negatives = polygons;
+        string outPath = args[1];
 
+        // Get a registry with all the deserialisers which can parse InputGeometry
+        var registry = DeserialiserRegistryFactory.Default<InputGeometry>();
+
+        // Load the input geometry using whichever deserialiser works
+        var inputGeometry = registry.Load(inPath);
 
         var simulator = new SimulationEngine();
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-        var setupSuccess = simulator.SetupSimulation(positive, negatives);
+        var watch = Stopwatch.StartNew();
+        var setupSuccess = simulator.SetupSimulation(inputGeometry);
         watch.Stop();
         Debug.Assert(setupSuccess, "Simulation Setup Failed");
 

@@ -15,8 +15,11 @@ public static class PolygonBuilder
     }
     
     // Take list of input polygons and return correctly ordered linked list of vertices
-    public static LinkedList<Vector2Int> BuildVertexList(Polygon positive, List<Polygon> negatives)
+    public static LinkedList<Vector2Int> BuildVertexList(InputGeometry inputGeometry)
     {
+        var positive = inputGeometry.Positive;
+        var negatives = inputGeometry.Negatives;
+        
         List<HoleInfo> holes = BuildHoleInfo(negatives);
         
         // Sort negative polygons with the rightmost polygon first

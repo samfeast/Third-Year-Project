@@ -7,9 +7,9 @@ public class SimulationEngine
 {
     public NavMesh? Mesh { get; private set; }
 
-    public bool SetupSimulation(Polygon positive, List<Polygon> negatives)
+    public bool SetupSimulation(InputGeometry inputGeometry)
     {
-        Mesh = NavMeshGenerator.GenerateNavMesh(positive, negatives);
+        Mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry);
         return true;
     }
 }
