@@ -1,6 +1,6 @@
 using Simulator.Core.Geometry.Primitives;
 
-namespace Simulator.Core.Geometry;
+namespace Simulator.Core.Geometry.Utils;
 
 // Direction-agnostic representation of an edge
 public struct EdgeKey(Vector2Int a, Vector2Int b) : IEquatable<EdgeKey>

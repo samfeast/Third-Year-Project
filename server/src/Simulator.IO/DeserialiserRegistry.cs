@@ -1,4 +1,5 @@
 using Simulator.Core.Geometry.Primitives;
+using Simulator.IO.Json;
 using Simulator.IO.Utils;
 
 namespace Simulator.IO;

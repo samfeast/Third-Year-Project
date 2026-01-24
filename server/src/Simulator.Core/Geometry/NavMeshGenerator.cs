@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Triangulators;
+using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Core.Geometry;
 

@@ -1,8 +1,7 @@
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Core.Geometry;
-
-
 
 public class NavMesh
 {

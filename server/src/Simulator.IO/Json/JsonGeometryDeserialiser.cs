@@ -2,7 +2,7 @@ using System.Text.Json;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.IO.Utils;
 
-namespace Simulator.IO;
+namespace Simulator.IO.Json;
 
 // Deserialisation logic for all JSON geometry parsers
 // When adding a new version, update Version bounds in CanRead(), add version to switch in Deserialise, and implement

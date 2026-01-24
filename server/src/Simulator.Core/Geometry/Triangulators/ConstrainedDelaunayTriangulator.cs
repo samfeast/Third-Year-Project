@@ -3,7 +3,7 @@ using Clipper2Lib;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Geometry.Utils;
 
-namespace Simulator.Core.Geometry;
+namespace Simulator.Core.Geometry.Triangulators;
 
 // Implementation of ITriangulator which uses the Clipper2 library
 public class ConstrainedDelaunayTriangulator : ITriangulator

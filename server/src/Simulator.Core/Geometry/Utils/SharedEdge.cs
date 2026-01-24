@@ -1,4 +1,4 @@
-namespace Simulator.Core.Geometry;
+namespace Simulator.Core.Geometry.Utils;
 
 public struct SharedEdge
 {
