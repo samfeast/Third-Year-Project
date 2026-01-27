@@ -31,6 +31,8 @@ public class Triangle
         return !(hasNeg && hasPos);
     }
 
+    public bool IsValid() => Sign(A, B, C) != 0;
+
     private static int Sign(Vector2Int v0, Vector2Int v1, Vector2Int v2)
     {
         return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);

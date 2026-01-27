@@ -5,11 +5,12 @@
     <RootNamespace>TriangleNet</RootNamespace>
     <AssemblyName>Triangle</AssemblyName>
     <Platforms>AnyCPU;x64</Platforms>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Authors>Christian Woltering</Authors>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <Version>1.0.0-beta5</Version>
     <LangVersion>default</LangVersion>
+    <NoWarn>$(NoWarn);*</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
