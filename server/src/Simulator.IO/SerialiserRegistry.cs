@@ -29,7 +29,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
         if (serialiser == null)
             throw new UnsupportedFormatException($"No serialiser for type={type}, version={version}, format={format}");
 
-        using var stream = File.OpenWrite(path);
+        using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
         return serialiser.Serialise(stream, data, version);
     }
 }
