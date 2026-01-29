@@ -1,8 +1,10 @@
 namespace Simulator.Core.Geometry.Primitives;
 
 // Representation of a triangle defined by three points on an integer grid
-public class Triangle
+public struct Triangle
 {
+    private const double EPSILON = 1e-9;
+    
     public Vector2Int A;
     public Vector2Int B;
     public Vector2Int C;
@@ -30,10 +32,28 @@ public class Triangle
 
         return !(hasNeg && hasPos);
     }
+    
+    // Returns true if p is inside the triangle or on one of the edges, false otherwise
+    public bool ContainsPoint(Vector2 p)
+    {
+        var d1 = Sign(p, A, B);
+        var d2 = Sign(p, B, C);
+        var d3 = Sign(p, C, A);
+
+        var hasNeg = d1 < -EPSILON || d2 < -EPSILON || d3 < -EPSILON;
+        var hasPos = d1 > EPSILON || d2 > EPSILON || d3 > EPSILON;
+
+        return !(hasNeg && hasPos);
+    }
 
     public bool IsValid() => Sign(A, B, C) != 0;
 
     private static int Sign(Vector2Int v0, Vector2Int v1, Vector2Int v2)
+    {
+        return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);
+    }
+    
+    private static double Sign(Vector2 v0, Vector2Int v1, Vector2Int v2)
     {
         return (v0.X - v2.X) * (v1.Y - v2.Y) - (v1.X - v2.X) * (v0.Y - v2.Y);
     }

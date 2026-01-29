@@ -4,15 +4,30 @@ namespace Simulator.Core.Geometry;
 
 public class NavMesh(int gridSize)
 {
-    public class Node(Triangle triangle)
+    public struct Node(Triangle triangle)
     {
         public readonly Vector2Int[] Vertices = [triangle.A, triangle.B, triangle.C];
         public readonly int[] Neighbours = [-1, -1, -1];
         public readonly Vector2Fraction Centroid = triangle.GetCentroid();
+        public readonly Triangle Triangle = triangle;
     }
     
     public readonly List<Node> Nodes = [];
     public readonly UniformGrid Grid = new(gridSize,gridSize);
+
+    public List<int> GetCurrentNode(double x, double y)
+    {
+        var possibleNodeIndices = Grid.Get(x, y);
+
+        var rtn = new List<int>(possibleNodeIndices.Count);
+        foreach (var i in possibleNodeIndices)
+        {
+            if (Nodes[i].Triangle.ContainsPoint(new Vector2(x, y)))
+                rtn.Add(i);
+        }
+
+        return rtn;
+    }
     
     public override string ToString()
     {

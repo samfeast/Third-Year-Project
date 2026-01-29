@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Simulator.Core.Geometry.Primitives;
 
 public class BoundingBox
