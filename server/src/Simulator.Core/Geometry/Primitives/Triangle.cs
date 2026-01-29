@@ -44,6 +44,11 @@ public class Triangle
         var y = new LongFraction(A.Y + B.Y + C.Y, 3);
         return new Vector2Fraction(x, y);
     }
+
+    public BoundingBox GetBoundingBox()
+    {
+        return new BoundingBox([A, B, C]);
+    }
     
     public override string ToString() => $"<{A}, {B}, {C}>";
 }

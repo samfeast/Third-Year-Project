@@ -7,6 +7,7 @@ namespace Simulator.Core.Geometry;
 
 public static class NavMeshGenerator
 {
+    private const int GridSize = 50;
     public static NavMesh GenerateNavMesh(InputGeometry inputGeometry)
     {
         // Toggle between CDT (from Clipper2) or ear clipping (own implementation)
@@ -26,27 +27,46 @@ public static class NavMeshGenerator
 
     private static NavMesh ConstructNavMeshObject(List<Triangle> triangles)
     {
-        NavMesh navMesh = new NavMesh();
+        var navMesh = new NavMesh(GridSize);
 
         // Create a node from every triangle in the triangulation
         for (int i = 0; i < triangles.Count; i++)
         {
-            var node = new NavMesh.Node(triangles[i]);
-            var index = navMesh.AddNode(node);
-            Debug.Assert(index == i, "Navmesh nodes must be ordered the same as triangles");
+            var triangle = triangles[i];
+            navMesh.Nodes.Add(new NavMesh.Node(triangle));
+            AddToGrid(navMesh, triangle, i);
         }
         
         Dictionary<EdgeKey, SharedEdge> edgeMap = BuildEdgeMap(triangles);
-        foreach (var (_, sharedEdge) in edgeMap)
+        foreach (var (_, edge) in edgeMap)
         {
             // If there is no second triangle the edge is only used by one triangle, so no neighbours need to be added
-            if (sharedEdge.TriangleIndex2 == -1)
+            if (edge.TriangleIndex2 == -1)
                 continue;
             
-            navMesh.AddNeighbour(sharedEdge);
+            navMesh.Nodes[edge.TriangleIndex1].Neighbours[edge.EdgeIndex1] = edge.TriangleIndex2;
+            navMesh.Nodes[edge.TriangleIndex2].Neighbours[edge.EdgeIndex2] = edge.TriangleIndex1;
         }
 
         return navMesh;
+    }
+
+    // Naive grid representation -> assign triangles to cells using their bounding box
+    private static void AddToGrid(NavMesh navMesh, Triangle triangle, int triangleIndex)
+    {
+        var boundingBox = triangle.GetBoundingBox();
+        var x = boundingBox.MinX;
+        while (x < boundingBox.MaxX)
+        {
+            var y = boundingBox.MinY;
+            while (y < boundingBox.MaxY)
+            {
+                navMesh.Grid.Add(x, y, triangleIndex);
+                y += GridSize;
+            }
+            x += GridSize;
+        }
+
     }
 
     private static Dictionary<EdgeKey, SharedEdge> BuildEdgeMap(List<Triangle> triangles)

@@ -29,7 +29,7 @@ public class Program
         {
             return;
         }
-        System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Count} triangles in {watch.ElapsedMilliseconds}ms");
+        System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Nodes.Count} triangles in {watch.ElapsedMilliseconds}ms");
         
         // Save the navmesh using whichever serialiser works
         var writeRegistry = SerialiserRegistryFactory.Default<NavMesh>();
