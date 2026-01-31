@@ -24,17 +24,19 @@ public readonly struct LongFraction : IEquatable<LongFraction>
         _denominator = den / gcd;
     }
     
+    public static LongFraction Zero => new LongFraction(0, 1);
+    
     public bool IsInfinity => _denominator == 0;
     
     public bool IsZero => !IsInfinity && _numerator == 0;
     public bool IsOne => !IsInfinity && _numerator == _denominator;
     
     // Infinity not considered either positive or negative
-    // 0 considered positive
+    // 0 is neither positive nor negative
     public bool IsPositive()
     {
         if (IsInfinity) return false;
-        if (IsZero) return true;
+        if (IsZero) return false;
         return _numerator > 0;
     }
 
@@ -99,6 +101,9 @@ public readonly struct LongFraction : IEquatable<LongFraction>
         
         return a._numerator * b._denominator == b._numerator * a._denominator;
     }
+
+    public static bool operator >=(LongFraction a, LongFraction b) => a > b || a == b;
+    public static bool operator <=(LongFraction a, LongFraction b) => a < b || a == b;
     
     public static bool operator !=(LongFraction a, LongFraction b) => !(a == b);
     
@@ -106,6 +111,46 @@ public readonly struct LongFraction : IEquatable<LongFraction>
     public override bool Equals(object? obj)
     {
         return obj is LongFraction other && this == other;
+    }
+
+    public static LongFraction ToLongFraction(double value)
+    {
+        // Return infinity if the input is NaN or infinity
+        if (double.IsNaN(value) || double.IsInfinity(value)) return new LongFraction(1, 0);
+        
+        long sign = Math.Sign(value);
+        value = Math.Abs(value);
+
+        long n0 = 0, d0 = 1;
+        long n1 = 1, d1 = 0;
+
+        var x = value;
+
+        // Should always break long before 1000 iterations, but exit after 1000 as failsafe
+        var iter = 0;
+        while (iter < 1000)
+        {
+            var a = (long)Math.Floor(x);
+
+            var n2 = a * n1 + n0;
+            var d2 = a * d1 + d0;
+
+            if (d2 > 1_000_000)
+                break;
+
+            var approximation = (double)n2 / d2;
+            if (Math.Abs(approximation - value) < 1e-9)
+                return new LongFraction(sign * n2, d2);
+
+            n0 = n1; d0 = d1;
+            n1 = n2; d1 = d2;
+
+            x = 1.0 / (x - a);
+
+            iter++;
+        }
+
+        return new LongFraction(sign * n1, d1);
     }
 
     // Evaluate all infinities to positive infinity

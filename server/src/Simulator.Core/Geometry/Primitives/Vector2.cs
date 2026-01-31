@@ -12,6 +12,8 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
     
     public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
     public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
+    public static Vector2 operator +(Vector2Int a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
+    public static Vector2 operator -(Vector2Int a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
     
     public static bool operator ==(Vector2 a, Vector2 b) => a.Equals(b);
     public static bool operator !=(Vector2 a, Vector2 b) => !a.Equals(b);
@@ -21,6 +23,13 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
     public override bool Equals(object? obj) => obj is Vector2 other && Equals(other);
     
     public override int GetHashCode() => HashCode.Combine(X, Y);
+
+    public Vector2Fraction ToVector2Fraction()
+    {
+        var x = LongFraction.ToLongFraction(X);
+        var y = LongFraction.ToLongFraction(Y);
+        return new Vector2Fraction(x, y);
+    }
 
     public Vector2 Round(int places)
     {
