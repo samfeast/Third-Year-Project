@@ -1,4 +1,4 @@
-using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Shapes;
 using Simulator.Core.Geometry.Triangulators;
 using Simulator.Core.Geometry.Utils;
 
@@ -6,34 +6,24 @@ namespace Simulator.Core.Geometry;
 
 public static class NavMeshGenerator
 {
-    private const int GridSize = 50;
-    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry)
+    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry, int gridResolution = 50)
     {
-        // Toggle between CDT (from Clipper2) or ear clipping (own implementation)
-        const bool useCdt = true;
-        ITriangulator triangulator;
-        if (useCdt)
-            triangulator = new ConstrainedDelaunayTriangulator();
-        else
-            triangulator = new EarClippingTriangulator();
-        
+        var triangulator = new ConstrainedDelaunayTriangulator();
         List<Triangle> triangles = triangulator.Triangulate(inputGeometry);
-
-        NavMesh navMesh = ConstructNavMeshObject(triangles);
         
-        return navMesh;
+        return ConstructNavMeshObject(triangles, gridResolution);
     }
 
-    private static NavMesh ConstructNavMeshObject(List<Triangle> triangles)
+    private static NavMesh ConstructNavMeshObject(List<Triangle> triangles, int gridResolution)
     {
-        var navMesh = new NavMesh(GridSize);
+        var navMesh = new NavMesh(gridResolution);
 
-        // Create a node from every triangle in the triangulation
+        // Create a node for every triangle in the triangulation and add it to the uniform grid
         for (int i = 0; i < triangles.Count; i++)
         {
             var triangle = triangles[i];
             navMesh.Nodes.Add(new NavMesh.Node(triangle));
-            AddToGrid(navMesh, triangle, i);
+            AddToGrid(navMesh, triangle, i, gridResolution);
         }
         
         Dictionary<EdgeKey, SharedEdge> edgeMap = BuildEdgeMap(triangles);
@@ -51,7 +41,8 @@ public static class NavMeshGenerator
     }
 
     // Naive grid representation -> assign triangles to cells using their bounding box
-    private static void AddToGrid(NavMesh navMesh, Triangle triangle, int triangleIndex)
+    // Could be optimised further if grid lookups become a bottleneck
+    private static void AddToGrid(NavMesh navMesh, Triangle triangle, int triangleIndex, int gridResolution)
     {
         var boundingBox = triangle.GetBoundingBox();
         var x = boundingBox.MinX;
@@ -61,9 +52,9 @@ public static class NavMeshGenerator
             while (y < boundingBox.MaxY)
             {
                 navMesh.Grid.Add(x, y, triangleIndex);
-                y += GridSize;
+                y += gridResolution;
             }
-            x += GridSize;
+            x += gridResolution;
         }
 
     }
@@ -74,9 +65,9 @@ public static class NavMeshGenerator
         for (int i = 0; i < triangles.Count; i++)
         {
             var t = triangles[i];
-            AddEdge(edgeMap, new EdgeKey(t.A, t.B), i, 0);
-            AddEdge(edgeMap, new EdgeKey(t.B, t.C), i, 1);
-            AddEdge(edgeMap, new EdgeKey(t.C, t.A), i, 2);
+            AddEdge(edgeMap, new EdgeKey(t.A, t.B), i, 0); // A->B
+            AddEdge(edgeMap, new EdgeKey(t.B, t.C), i, 1); // B->C
+            AddEdge(edgeMap, new EdgeKey(t.C, t.A), i, 2); // C->A
         }
 
         return edgeMap;
@@ -84,6 +75,7 @@ public static class NavMeshGenerator
     
     private static void AddEdge(Dictionary<EdgeKey, SharedEdge> edgeMap, EdgeKey key, int triangleIndex, int edgeIndex)
     {
+        // If the shared edge already exists set the second triangle and corresponding index
         if (edgeMap.TryGetValue(key, out var edge))
         {
             edge.TriangleIndex2 = triangleIndex;
@@ -91,7 +83,7 @@ public static class NavMeshGenerator
             edgeMap[key] = edge;
             return;
         }
-
+        // If the edge doesn't exist create it with only the first triangle and corresponding index
         edgeMap[key] = new SharedEdge
         {
             TriangleIndex1 = triangleIndex,

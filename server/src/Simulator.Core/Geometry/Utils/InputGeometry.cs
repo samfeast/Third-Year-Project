@@ -1,4 +1,6 @@
-namespace Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Shapes;
+
+namespace Simulator.Core.Geometry.Utils;
 
 public record InputGeometry(Polygon Positive, List<Polygon> Negatives)
 {

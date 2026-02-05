@@ -1,7 +1,10 @@
 using System.Diagnostics;
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Shapes;
 
 namespace Simulator.Core.Geometry.Utils;
+
+// Utilised by the (now deprecated) ear clipping triangulator
 
 // This class exposes BuildVertexList() which forms a pseudosimple polygon which accounts for holes in the outer polygon
 public static class PolygonBuilder

@@ -1,5 +1,5 @@
 using Simulator.Core.Geometry;
-using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Core;
 

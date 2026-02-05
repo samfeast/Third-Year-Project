@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Simulator.Core;
 using Simulator.Core.Geometry;
-using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
 
 namespace Simulator.Console;

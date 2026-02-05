@@ -1,7 +1,9 @@
-namespace Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Primitives;
+
+namespace Simulator.Core.Geometry.Shapes;
 
 // Representation of a triangle defined by three vertices, each represented by rational fractions
-public class TriangleFraction
+public struct TriangleFraction
 {
     public Vector2Fraction A;
     public Vector2Fraction B;

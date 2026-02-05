@@ -1,4 +1,4 @@
-namespace Simulator.Core.Geometry.Primitives;
+namespace Simulator.Core.Geometry;
 
 public class UniformGrid(int cellHeight, int cellWidth)
 {

@@ -2,8 +2,8 @@ using Simulator.Core.Geometry.Primitives;
 using TriangleNet.Geometry;
 using ExtPolygon = TriangleNet.Geometry.Polygon;
 using ExtTriangle = TriangleNet.Topology.Triangle;
-using Polygon = Simulator.Core.Geometry.Primitives.Polygon;
-using Triangle = Simulator.Core.Geometry.Primitives.Triangle;
+using Polygon = Simulator.Core.Geometry.Shapes.Polygon;
+using Triangle = Simulator.Core.Geometry.Shapes.Triangle;
 
 namespace Simulator.Core.Geometry.Utils;
 

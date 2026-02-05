@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Utils;
 using Simulator.IO.Utils;
 
 namespace Simulator.IO.Json;

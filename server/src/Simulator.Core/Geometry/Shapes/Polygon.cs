@@ -1,4 +1,6 @@
-namespace Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Primitives;
+
+namespace Simulator.Core.Geometry.Shapes;
 
 public class Polygon
 {

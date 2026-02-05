@@ -1,4 +1,4 @@
-using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Shapes;
 using Simulator.Core.Geometry.Utils;
 using TriangleNet.Geometry;
 

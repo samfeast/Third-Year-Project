@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Shapes;
 
 namespace Simulator.Core.Geometry;
 
@@ -22,34 +23,21 @@ public class NavMesh(int gridSize)
     public readonly List<Node> Nodes = [];
     public readonly UniformGrid Grid = new(gridSize,gridSize);
 
-    public void Navigate(Vector2 source, Vector2 destination)
+    public List<Vector2Fraction> Navigate(Vector2 source, Vector2 destination)
     {
         // Degrades when starting and ending on boundaries
         var startNode = GetCurrentNode(source.X, source.Y)[0];
         var endNode = GetCurrentNode(destination.X, destination.Y)[0];
 
         var channel = GetChannel(startNode, endNode);
-
-        foreach (var node in channel)
-        {
-            Console.WriteLine(Nodes[node].Centroid.Evaluate().Round(1));
-        }
         
         var portals = GetPortals(channel);
         
         portals.Add(new Portal(destination.ToVector2Fraction(), destination.ToVector2Fraction()));
-
-        for (int i = 0; i < portals.Count; i++)
-        {
-            Console.WriteLine($"{i}: {portals[i].Left}\tX\t{portals[i].Right}");
-        }
         
         var path = Funnel(source.ToVector2Fraction(), destination.ToVector2Fraction(), portals);
 
-        foreach (var point in path)
-        {
-            Console.WriteLine(point.Evaluate().Round(1));
-        }
+        return path;
     }
 
     private List<int> GetCurrentNode(double x, double y)
@@ -184,47 +172,47 @@ public class NavMesh(int gridSize)
         var left = portals[leftIndex].Left;
         var right = portals[rightIndex].Right;
         
-        for (int i = portalIndex; i < portals.Count; i++)
+        for (int i = portalIndex; i < portals.Count - 1; i++)
         {
-            var nextLeft = portals[i+1].Left;
-            var nextRight = portals[i+1].Right;
-            
-            // If nextLeft is outside the funnel on the left side, don't update the left edge (it would widen the full)
-            if (Sign(apex, left, nextLeft) <= LongFraction.Zero)
+            // If left and right have converged to the same vertex then it must be the destination, so exit.
+            if (left == right)
             {
-                // If nextLeft is inside the funnel, update the left edge (to shrink the funnel)
-                if (Sign(apex, right, nextLeft) >= LongFraction.Zero)
+                return (left, -1);
+            }
+            
+            var candidateLeft = portals[i+1].Left;
+            var candidateRight = portals[i+1].Right;
+            
+            // If candidateLeft is outside the funnel on the left side, don't update the left edge (it would widen the full)
+            if (Sign(apex, left, candidateLeft) <= LongFraction.Zero)
+            {
+                // If candidateLeft is inside the funnel, update the left edge (to shrink the funnel)
+                if (Sign(apex, right, candidateLeft) >= LongFraction.Zero)
                 {
                     leftIndex++;
-                    left = nextLeft;
+                    left = candidateLeft;
                 }
-                // If nextLeft crosses the right edge, return the current right edge (it's a fixed point)
+                // If candidateLeft crosses the right edge, return the current right edge (it's a fixed point)
                 else
                 {
                     return (right, GetNextFunnelIndex(portals, right, rightIndex, false)+1);
                 }
             }
 
-            // If nextRight is outside the funnel on the right side, don't update the right edge (it would widen the full)
-            if (Sign(apex, right, nextRight) >= LongFraction.Zero)
+            // If candidateRight is outside the funnel on the right side, don't update the right edge (it would widen the full)
+            if (Sign(apex, right, candidateRight) >= LongFraction.Zero)
             {
-                // If nextRight is inside the funnel, update the right edge (to shrink the funnel)
-                if (Sign(apex, left, nextRight) <= LongFraction.Zero)
+                // If candidateRight is inside the funnel, update the right edge (to shrink the funnel)
+                if (Sign(apex, left, candidateRight) <= LongFraction.Zero)
                 {
                     rightIndex++;
-                    right = nextRight;
+                    right = candidateRight;
                 }
-                // If nextRight crosses the left edge, return the current left edge (it's a fixed point)
+                // If candidateRight crosses the left edge, return the current left edge (it's a fixed point)
                 else
                 {
                     return (left, GetNextFunnelIndex(portals, left, leftIndex, true)+1);
                 }
-            }
-
-            // If left and right have converged to the same vertex then it must be the destination, so exit.
-            if (left == right)
-            {
-                return (left, -1);
             }
         }
         

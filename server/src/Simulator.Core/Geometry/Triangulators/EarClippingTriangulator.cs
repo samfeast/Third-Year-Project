@@ -1,8 +1,11 @@
 using System.Diagnostics;
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Geometry.Shapes;
 using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Core.Geometry.Triangulators;
+
+// DEPRECATED
 
 // Implementation of ITriangulator which triangulates geometry using ear clipping algorithm
 public class EarClippingTriangulator : ITriangulator
