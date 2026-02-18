@@ -12,28 +12,62 @@ public class Program
     {
         // Expect two arguments: input file path, output file path 
         string inPath = args[0];
-        string outPath = args[1];
+        string meshOutPath = args[1];
+        string snapshotsOutPath = args[2];
 
         // Get a registry with all the deserialisers which can parse InputGeometry
         var readRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
 
         // Load the input geometry using whichever deserialiser works
         var inputGeometry = readRegistry.Load(inPath);
+        
+        System.Console.WriteLine("Geometry loaded");
 
-        var simulator = new SimulationEngine();
+        int numAgents = 30;
+        double timeStep = 0.1f;
+
+        var simulator = new SimulationEngine(timeStep);
         var watch = Stopwatch.StartNew();
-        var setupSuccess = simulator.SetupSimulation(inputGeometry);
+        simulator.SetupSimulation(inputGeometry, numAgents);
         watch.Stop();
-        Debug.Assert(setupSuccess, "Simulation Setup Failed");
+        
         if (simulator.Mesh == null)
         {
             return;
         }
+        
         System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Nodes.Count} triangles in {watch.ElapsedMilliseconds}ms");
         
         // Save the navmesh using whichever serialiser works
-        var writeRegistry = SerialiserRegistryFactory.Default<NavMesh>();
-        var writeSuccess = writeRegistry.Save(outPath, simulator.Mesh, 1);
-        Debug.Assert(writeSuccess, "Failed to write input geometry");
+        var meshWriteRegistry = SerialiserRegistryFactory.Default<NavMesh>();
+        var meshWriteSuccess = meshWriteRegistry.Save(meshOutPath, simulator.Mesh, 1);
+        Debug.Assert(meshWriteSuccess, "Failed to write input geometry");
+        
+        watch = Stopwatch.StartNew();
+
+        List<SimulationSnapshot> snapshots = [];        
+
+        while (true)
+        {
+            var snapshot = simulator.StepSimulation();
+            snapshots.Add(snapshot);
+
+            if (snapshot.Step % 60 == 0)
+            {
+                System.Console.WriteLine($"{Math.Round(snapshot.Step * timeStep)}s of simulation time ({snapshot.Step} steps) simulated in {watch.ElapsedMilliseconds}ms with {numAgents} agents");
+                System.Console.WriteLine(snapshot);
+            }
+
+            if (snapshot.AllComplete)
+            {
+                System.Console.WriteLine("Simulation finished");
+                System.Console.WriteLine(snapshot);
+                break;
+            }
+        }
+        
+        var snapshotsWriteRegistry = SerialiserRegistryFactory.Default<List<SimulationSnapshot>>();
+        var snapshotsWriteSuccess = snapshotsWriteRegistry.Save(snapshotsOutPath, snapshots, 1);
+        Debug.Assert(snapshotsWriteSuccess, "Failed to write simulation snapshots");
     }
 }
