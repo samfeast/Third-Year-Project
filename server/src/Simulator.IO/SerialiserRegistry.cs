@@ -1,3 +1,4 @@
+using Simulator.Core;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Utils;
 using Simulator.IO.Json;
@@ -21,6 +22,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
         {
             var t when t == typeof(InputGeometry) => DataType.Geometry,
             var t when t == typeof(NavMesh) => DataType.Mesh,
+            var t when t == typeof(List<SimulationSnapshot>) => DataType.SimulationSnapshots,
             _ => throw new NotSupportedException($"Unknown data type {typeof(T).Name}")
         };
 
@@ -49,6 +51,12 @@ public static class SerialiserRegistryFactory
         {
             return new SerialiserRegistry<T>([
                 (ISerialiser<T>) new JsonMeshSerialiser()
+            ]);
+        }
+        if (typeof(T) == typeof(List<SimulationSnapshot>))
+        {
+            return new SerialiserRegistry<T>([
+                (ISerialiser<T>) new JsonSimulationSnapshotsSerialiser()
             ]);
         }
 
