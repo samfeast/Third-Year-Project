@@ -12,6 +12,7 @@ public class NavMesh(int gridSize)
         public readonly int[] Neighbours = [-1, -1, -1];
         public readonly Vector2Fraction Centroid = triangle.GetCentroid();
         public readonly Triangle Triangle = triangle;
+        public readonly int DoubleArea = triangle.GetDoubleArea();
     }
 
     public struct Portal(Vector2Fraction left, Vector2Fraction right)
@@ -22,6 +23,7 @@ public class NavMesh(int gridSize)
     
     public readonly List<Node> Nodes = [];
     public readonly UniformGrid Grid = new(gridSize,gridSize);
+    public readonly List<int> CumulativeDoubleAreas = [];
 
     public List<Vector2Fraction> Navigate(Vector2 source, Vector2 destination)
     {
@@ -50,7 +52,7 @@ public class NavMesh(int gridSize)
             if (Nodes[i].Triangle.ContainsPoint(new Vector2(x, y)))
                 rtn.Add(i);
         }
-
+        Debug.Assert(rtn.Count > 0, $"Failed to find node: {x} {y}");
         return rtn;
     }
 
@@ -216,8 +218,8 @@ public class NavMesh(int gridSize)
             }
         }
         
-        // Unreachable
-        return (apex, portalIndex);
+        // Only reached if destination is directly visible from start point
+        return (portals.Last().Left, -1);
     }
 
     private static int GetNextFunnelIndex(List<Portal> portals, Vector2Fraction point, int startIndex, bool isLeft)

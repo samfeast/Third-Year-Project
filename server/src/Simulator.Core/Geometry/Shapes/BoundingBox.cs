@@ -24,4 +24,12 @@ public class BoundingBox
         MinY = Math.Min(MinY, vertex.Y);
         MaxY = Math.Max(MaxY, vertex.Y);
     }
+
+    public Vector2 GenerateRandomPoint(Random rng)
+    {
+        var x = rng.Next(MinX, MaxX + 1);
+        var y = rng.Next(MinY, MaxY + 1);
+
+        return new Vector2(x, y);
+    }
 }

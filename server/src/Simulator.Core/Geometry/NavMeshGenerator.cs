@@ -22,7 +22,9 @@ public static class NavMeshGenerator
         for (int i = 0; i < triangles.Count; i++)
         {
             var triangle = triangles[i];
-            navMesh.Nodes.Add(new NavMesh.Node(triangle));
+            var node = new NavMesh.Node(triangle);
+            navMesh.Nodes.Add(node);
+            navMesh.CumulativeDoubleAreas.Add(node.DoubleArea + navMesh.CumulativeDoubleAreas.LastOrDefault());
             AddToGrid(navMesh, triangle, i, gridResolution);
         }
         
@@ -46,15 +48,15 @@ public static class NavMeshGenerator
     {
         var boundingBox = triangle.GetBoundingBox();
         var x = boundingBox.MinX;
-        while (x < boundingBox.MaxX)
+        while (x <= boundingBox.MaxX)
         {
             var y = boundingBox.MinY;
-            while (y < boundingBox.MaxY)
+            while (y <= boundingBox.MaxY)
             {
                 navMesh.Grid.Add(x, y, triangleIndex);
-                y += gridResolution;
+                y += Math.Min(gridResolution, boundingBox.MaxY - boundingBox.MinY);
             }
-            x += gridResolution;
+            x += Math.Min(gridResolution, boundingBox.MaxX - boundingBox.MinX);
         }
 
     }

@@ -71,6 +71,21 @@ public struct Triangle
     {
         return new BoundingBox([A, B, C]);
     }
+
+    public int GetDoubleArea()
+    {
+        return Math.Abs(A.X * (B.Y - C.Y) + B.X * (C.Y - A.Y) + C.X * (A.Y - B.Y));
+    }
+
+    public Vector2 GenerateRandomPoint(Random rng)
+    {
+        var bbox = GetBoundingBox();
+        while (true)
+        {
+            var p = bbox.GenerateRandomPoint(rng);
+            if (ContainsPoint(p)) return p;
+        }
+    }
     
     public override string ToString() => $"<{A}, {B}, {C}>";
 }
