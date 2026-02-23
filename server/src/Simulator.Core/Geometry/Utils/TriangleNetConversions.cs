@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Simulator.Core.Geometry.Primitives;
 using TriangleNet.Geometry;
 using ExtPolygon = TriangleNet.Geometry.Polygon;
@@ -9,11 +10,11 @@ namespace Simulator.Core.Geometry.Utils;
 
 public static class TriangleNetConversions
 {
-    public static ExtPolygon InputGeometryToExtPolygon(InputGeometry inputGeometry)
+    public static ExtPolygon InputGeometryToExtPolygon(Polygon positive, List<Polygon> negatives)
     {
         var polygon = new ExtPolygon();
-        polygon.AddPolygon(inputGeometry.Positive);
-        foreach (var negative in inputGeometry.Negatives)
+        polygon.AddPolygon(positive);
+        foreach (var negative in negatives)
         {
             polygon.AddPolygon(negative);
             polygon.Holes.Add(FindInteriorPoint(negative));
@@ -75,8 +76,7 @@ public static class TriangleNetConversions
                 return new Point(roundedCentroid.X, roundedCentroid.Y);
         }
 
-        // Unreachable
-        return new Point(0,0);
+        throw new UnreachableException();
     }
 
     private static Vertex Vector2IntToVertex(Vector2Int v) => new(v.X, v.Y);

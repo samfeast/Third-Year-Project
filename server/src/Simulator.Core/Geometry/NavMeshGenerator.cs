@@ -6,9 +6,9 @@ namespace Simulator.Core.Geometry;
 
 public static class NavMeshGenerator
 {
-    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry, int gridResolution = 50)
+    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry, int gridResolution = 50, int exclusionRad = 45)
     {
-        var triangulator = new ConstrainedDelaunayTriangulator();
+        var triangulator = new ConstrainedDelaunayTriangulator(exclusionRad);
         List<Triangle> triangles = triangulator.Triangulate(inputGeometry);
         
         return ConstructNavMeshObject(triangles, gridResolution);
