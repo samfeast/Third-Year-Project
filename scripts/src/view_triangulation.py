@@ -64,7 +64,7 @@ def main():
     lines = deduplicate_lines(lines)
     plot_lines(lines)
 
-    plot_grid(50, min_x, max_x, min_y, max_y)
+    plot_grid(500, min_x, max_x, min_y, max_y)
 
     plt.axis("off")
     plt.gca().set_aspect("equal", adjustable="box")

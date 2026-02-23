@@ -51,21 +51,34 @@ def main():
         snapshots = []
         for s in data["snapshots"]:
             snapshot_positions = []
+            snapshot_speeds = []
             for agent in s["agents"]:
                 pos = agent["position"]
+                speed = agent["speed"]
                 snapshot_positions.append(pos)
+                snapshot_speeds.append(speed)
 
-            snapshots.append(np.array(snapshot_positions))
+            snapshots.append(
+                {"positions": np.array(snapshot_positions), "speeds": np.array(snapshot_speeds)}
+            )
 
     print("Finished loading snapshot data")
 
-    scat = ax.scatter([], [], s=10, c="blue")
+    scat = ax.scatter([], [], s=10, c=[], cmap="viridis", vmin=90, vmax=150, zorder=5)
 
     ax.axis("off")
     fig.gca().set_aspect("equal", adjustable="box")
 
+    cbar = fig.colorbar(scat)
+    cbar.set_label("Speed")
+
     def update(frame):
-        scat.set_offsets(snapshots[frame])
+        data = snapshots[frame]
+        positions = data["positions"]
+        speeds = data["speeds"]
+
+        scat.set_offsets(positions)
+        scat.set_array(speeds)  # This tells scatter to color by speed
         return (scat,)
 
     print("Rendering animation")
@@ -78,7 +91,7 @@ def main():
     )
 
     print("Saving video")
-    ani.save("../output/simulation.mp4", writer="ffmpeg", fps=10, dpi=300)
+    ani.save("../output/simulation.mp4", writer="ffmpeg", fps=20, dpi=300)
 
     print("Visualisation saved to simulation.mp4")
 
