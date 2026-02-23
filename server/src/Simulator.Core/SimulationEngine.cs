@@ -6,17 +6,20 @@ using Simulator.Core.Utils;
 
 namespace Simulator.Core;
 
-public class SimulationEngine(double timeStep, int? seed = null)
+public class SimulationEngine
 {
     // Initialise RNG with random seed if one isn't provided
-    private readonly Random _rng = seed == null ? new Random() : new Random(seed.Value);
-    public NavMesh? Mesh { get; private set; }
-    public List<Agent> LiveAgents = [];
+    private readonly Random _rng;
+    public NavMesh Mesh { get; private set; }
+    public List<Agent> LiveAgents;
     public int Step = 1;
-    public double TimeStep = timeStep;
+    public double TimeStep;
     
-    public void SetupSimulation(InputGeometry inputGeometry, int numAgents)
+    public SimulationEngine(InputGeometry inputGeometry, double timeStep, int numAgents, int? seed = null)
     {
+        TimeStep = timeStep;
+        _rng = seed == null ? new Random() : new Random(seed.Value);
+        
         Mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50);
         LiveAgents = new List<Agent>(numAgents);
 

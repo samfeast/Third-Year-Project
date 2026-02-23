@@ -26,15 +26,10 @@ public class Program
         int numAgents = 50;
         double timeStep = 0.05f;
 
-        var simulator = new SimulationEngine(timeStep, 100);
         var watch = Stopwatch.StartNew();
-        simulator.SetupSimulation(inputGeometry, numAgents);
+        var simulator = new SimulationEngine(inputGeometry, timeStep, numAgents, 100);
         watch.Stop();
         
-        if (simulator.Mesh == null)
-        {
-            return;
-        }
         
         System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Nodes.Count} triangles in {watch.ElapsedMilliseconds}ms");
         
