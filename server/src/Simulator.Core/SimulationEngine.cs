@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Geometry.Utils;
+using Simulator.Core.Utils;
 
 namespace Simulator.Core;
 
@@ -16,7 +17,7 @@ public class SimulationEngine(double timeStep, int? seed = null)
     
     public void SetupSimulation(InputGeometry inputGeometry, int numAgents)
     {
-        Mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry);
+        Mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50);
         LiveAgents = new List<Agent>(numAgents);
 
         // Generate random start and end points for all numAgents
@@ -30,7 +31,8 @@ public class SimulationEngine(double timeStep, int? seed = null)
         // Calculate paths to end positions
         for (int i = 0; i < numAgents; i++)
         {
-            LiveAgents[i].ComputePath(Mesh, endPoints[i]);
+            //LiveAgents[i].ComputePath(Mesh, endPoints[i]);
+            LiveAgents[i].ComputePath(Mesh, new Vector2(250, 250));
         }
     }
 
@@ -38,8 +40,9 @@ public class SimulationEngine(double timeStep, int? seed = null)
     {
         for (int i = 0; i < startPoints.Length; i++)
         {
-            // Hardcoded speeds for now
-            LiveAgents.Add(new Agent(i, startStep, 20f, startPoints[i]));
+            // Shape and scale parameters taken from Poulos et al.
+            var speed = StatisticalDistributions.SampleWeibull(_rng, 10.14f, 1.41f) * 100f;
+            LiveAgents.Add(new Agent(i, startStep, speed, startPoints[i]));
         }
     }
 
@@ -83,7 +86,7 @@ public class SimulationEngine(double timeStep, int? seed = null)
         {
             var agentSnapshot = agent.Update(TimeStep);
             
-            snapshot.AddAgent(agentSnapshot.Id, agentSnapshot.Position);
+            snapshot.AddAgent(agentSnapshot.Id, agentSnapshot.Position, agentSnapshot.Speed);
 
             if (agentSnapshot.ReachedDestination)
                 completeThisStep.Add(agent);

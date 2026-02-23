@@ -23,10 +23,10 @@ public class Program
         
         System.Console.WriteLine("Geometry loaded");
 
-        int numAgents = 30;
-        double timeStep = 0.1f;
+        int numAgents = 50;
+        double timeStep = 0.05f;
 
-        var simulator = new SimulationEngine(timeStep);
+        var simulator = new SimulationEngine(timeStep, 100);
         var watch = Stopwatch.StartNew();
         simulator.SetupSimulation(inputGeometry, numAgents);
         watch.Stop();

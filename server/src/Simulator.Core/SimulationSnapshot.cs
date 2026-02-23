@@ -8,12 +8,14 @@ public struct SimulationSnapshot(int n, int step)
     public int StoredAgents = 0;
     public int[] Ids = new int[n];
     public Vector2[] Positions = new Vector2[n];
+    public double[] Speeds = new double[n];
     public bool AllComplete;
 
-    public void AddAgent(int id, Vector2 position)
+    public void AddAgent(int id, Vector2 position, double speed)
     {
         Ids[StoredAgents] = id;
         Positions[StoredAgents] = position;
+        Speeds[StoredAgents] = speed;
         StoredAgents++;
     }
 
@@ -34,7 +36,7 @@ public struct SimulationSnapshot(int n, int step)
 
             for (int i = 0; i < previewCount; i++)
             {
-                sb.AppendLine($"    [{i}] Id={Ids[i]}, Pos={Positions[i]}");
+                sb.AppendLine($"    [{i}] Id={Ids[i]}, Pos={Positions[i]}, Speed={Speeds[i]}");
             }
 
             if (StoredAgents > previewCount)

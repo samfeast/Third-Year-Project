@@ -3,10 +3,11 @@ using Simulator.Core.Geometry.Primitives;
 
 namespace Simulator.Core;
 
-public struct AgentSnapshot(int id, Vector2 position, bool reachedDestination)
+public struct AgentSnapshot(int id, Vector2 position, double speed, bool reachedDestination)
 {
     public readonly int Id = id;
     public readonly Vector2 Position = position;
+    public readonly double Speed = speed;
     public readonly bool ReachedDestination = reachedDestination;
 }
 
@@ -23,8 +24,6 @@ public class Agent(int id, int startStep, double _maxSpeed, Vector2 startPos)
     // Generate waypoints from current position to destination across provided navMesh
     public void ComputePath(NavMesh navMesh, Vector2 destination)
     {
-        Console.WriteLine($"From {Position}");
-        Console.WriteLine($"To {destination}");
         _waypoints = navMesh.Navigate(Position, destination);
         _nextWaypointIndex = 0;
     }
@@ -37,7 +36,7 @@ public class Agent(int id, int startStep, double _maxSpeed, Vector2 startPos)
         {
             // Do not move if already at final waypoint
             if (_nextWaypointIndex >= _waypoints.Count)
-                return new AgentSnapshot(Id, Position, true);
+                return new AgentSnapshot(Id, Position, _maxSpeed, true);
 
             
             var distToNextWaypoint = DistToNextWaypoint();
@@ -52,7 +51,7 @@ public class Agent(int id, int startStep, double _maxSpeed, Vector2 startPos)
             _nextWaypointIndex++;
         }
 
-        return new AgentSnapshot(Id, Position, false);
+        return new AgentSnapshot(Id, Position, _maxSpeed, false);
     }
 
     private double DistToNextWaypoint()

@@ -31,11 +31,13 @@ public class JsonSimulationSnapshotsSerialiser : ISerialiser<List<SimulationSnap
     //             "agents": [
     //                 {
     //                     "id": a1,
-    //                     "position": [x1,y1]
+    //                     "position": [x1,y1],
+    //                     "speed": v1
     //                 },
     //                 {
     //                     "id": a2,
-    //                     "position": [x2,y2]
+    //                     "position": [x2,y2],
+    //                     "speed": v2
     //                 }...
     //             ]
     //         },
@@ -46,10 +48,12 @@ public class JsonSimulationSnapshotsSerialiser : ISerialiser<List<SimulationSnap
     //                 {
     //                     "id": a3,
     //                     "position": [x3,y3]
+    //                     "speed": v3
     //                 },
     //                 {
     //                     "id": a4,
     //                     "position": [x4,y4]
+    //                     "speed": v4
     //                 }...
     //             ]
     //         }...
@@ -74,7 +78,8 @@ public class JsonSimulationSnapshotsSerialiser : ISerialiser<List<SimulationSnap
                         {
                             snapshot.Positions[i].X,
                             snapshot.Positions[i].Y
-                        }
+                        },
+                        speed = snapshot.Speeds[i]
                     })
             })
         };
