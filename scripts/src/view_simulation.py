@@ -38,10 +38,10 @@ def main():
 
     fig, ax = plt.subplots()
 
-    plot_polygon(ax, polygons_x[0], polygons_y[0], "grey")
+    plot_polygon(ax, polygons_x[0], polygons_y[0], "grey", 0.2)
 
     for i in range(1, len(polygons_x)):
-        plot_polygon(ax, polygons_x[i], polygons_y[i], "white")
+        plot_polygon(ax, polygons_x[i], polygons_y[i], "white", 0.2)
 
     with open(snapshots_path, "r") as read_file:
         data = json.load(read_file)
@@ -64,7 +64,7 @@ def main():
 
     print("Finished loading snapshot data")
 
-    scat = ax.scatter([], [], s=10, c=[], cmap="viridis", vmin=90, vmax=150, zorder=5)
+    scat = ax.scatter([], [], s=0.45, c=[], cmap="viridis", vmin=90, vmax=150, zorder=5)
 
     ax.axis("off")
     fig.gca().set_aspect("equal", adjustable="box")
@@ -96,9 +96,8 @@ def main():
     print("Visualisation saved to simulation.mp4")
 
 
-def plot_polygon(ax, x, y, color):
-    ax.fill(x, y, color=color)
-    ax.plot(x + [x[0]], y + [y[0]], color="black", linewidth=2, zorder=2)
+def plot_polygon(ax, x, y, color, line_width):
+    ax.fill(x, y, facecolor=color, edgecolor="black", linewidth=line_width, antialiased=False)
 
 
 if __name__ == "__main__":
