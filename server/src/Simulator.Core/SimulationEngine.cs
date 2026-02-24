@@ -1,38 +1,37 @@
 using System.Diagnostics;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
-using Simulator.Core.Geometry.Utils;
 using Simulator.Core.Utils;
 
 namespace Simulator.Core;
 
 public class SimulationEngine
 {
-    // Initialise RNG with random seed if one isn't provided
     private readonly Random _rng;
     public NavMesh Mesh { get; private set; }
     public List<Agent> LiveAgents;
     public int Step = 1;
     public double TimeStep;
     
-    public SimulationEngine(InputGeometry inputGeometry, double timeStep, int numAgents, int? seed = null)
+    public SimulationEngine(SimulationConfig config)
     {
-        TimeStep = timeStep;
-        _rng = seed == null ? new Random() : new Random(seed.Value);
+        TimeStep = config.TimeStep;
+        // Initialise RNG with random seed if one isn't provided
+        _rng = config.Seed == null ? new Random() : new Random(config.Seed.Value);
         
-        Mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50);
-        LiveAgents = new List<Agent>(numAgents);
+        Mesh = NavMeshGenerator.GenerateNavMesh(config.Geometry, 50);
+        LiveAgents = new List<Agent>(config.NumAgents);
 
         // Generate random start and end points for all numAgents
-        var points = GenerateRandomPoints(2 * numAgents);
-        var startPoints = points.Take(numAgents).ToArray();
-        var endPoints = points.Skip(numAgents).ToArray();
+        var points = GenerateRandomPoints(2 * config.NumAgents);
+        var startPoints = points.Take(config.NumAgents).ToArray();
+        var endPoints = points.Skip(config.NumAgents).ToArray();
         
         // Create the agents at the start positions on step 0
         CreateAgents(0, startPoints);
 
         // Calculate paths to end positions
-        for (int i = 0; i < numAgents; i++)
+        for (int i = 0; i < config.NumAgents; i++)
         {
             //LiveAgents[i].ComputePath(Mesh, endPoints[i]);
             LiveAgents[i].ComputePath(Mesh, new Vector2(250, 250));

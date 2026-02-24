@@ -27,7 +27,8 @@ public class Program
         double timeStep = 0.05f;
 
         var watch = Stopwatch.StartNew();
-        var simulator = new SimulationEngine(inputGeometry, timeStep, numAgents, 100);
+        var config = new SimulationConfig(inputGeometry, timeStep, numAgents, 100);
+        var simulator = new SimulationEngine(config);
         watch.Stop();
         
         
