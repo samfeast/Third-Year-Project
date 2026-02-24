@@ -26,34 +26,10 @@ public class SimulationManager
     private readonly ConcurrentQueue<IManagerCommand> _simulationManagerCommands = new();
 
     public event Action<Guid, SimulationSnapshot>? SnapshotProduced;
-
-    private readonly CancellationTokenSource _cts = new();
-
-    public void Start()
-    {
-        Task.Run(RunLoop);
-    }
-
-    public void Stop()
-    {
-        _cts.Cancel();
-    }
     
-    // Enqueue manager-level command
-    public void EnqueueCommand(IManagerCommand command)
+    public async Task RunLoop(CancellationToken token)
     {
-        _simulationManagerCommands.Enqueue(command);
-    }
-
-    // Enqueue simulation-level command
-    public void EnqueueCommand(Guid id, ISimulationCommand command)
-    {
-        _simulationCommandQueues[id].Enqueue(command);
-    }
-
-    private async Task RunLoop()
-    {
-        while (!_cts.IsCancellationRequested)
+        while (!token.IsCancellationRequested)
         {
             ProcessManagerCommands();
             
@@ -66,12 +42,29 @@ public class SimulationManager
                 if (simulator.Status != SimulationStatus.Running) continue;
                 
                 var snapshot = engine.StepSimulation();
+                if (snapshot.AllComplete)
+                {
+                    simulator.Status = SimulationStatus.Finished;
+                }
+                
                 SnapshotProduced?.Invoke(id, snapshot);
             }
 
             // Wait 50ms between steps to avoid uncontrolled simulation
-            await Task.Delay(50, _cts.Token);
+            await Task.Delay(50, token);
         }
+    }
+    
+    // Enqueue manager-level command
+    public void EnqueueCommand(IManagerCommand command)
+    {
+        _simulationManagerCommands.Enqueue(command);
+    }
+
+    // Enqueue simulation-level command
+    public void EnqueueCommand(Guid id, ISimulationCommand command)
+    {
+        _simulationCommandQueues[id].Enqueue(command);
     }
 
     // Process manager-level commands
