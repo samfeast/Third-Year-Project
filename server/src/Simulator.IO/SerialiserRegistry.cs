@@ -23,6 +23,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
             var t when t == typeof(InputGeometry) => DataType.Geometry,
             var t when t == typeof(NavMesh) => DataType.Mesh,
             var t when t == typeof(List<SimulationSnapshot>) => DataType.SimulationSnapshots,
+            var t when t == typeof(SimulationSnapshot) => DataType.SimulationSnapshot,
             _ => throw new NotSupportedException($"Unknown data type {typeof(T).Name}")
         };
 
@@ -32,7 +33,8 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
             throw new UnsupportedFormatException($"No serialiser for type={type}, version={version}, format={format}");
 
         using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
-        return serialiser.Serialise(stream, data, version);
+        serialiser.Serialise(data, version, stream);
+        return true;
     }
 }
 
@@ -57,6 +59,12 @@ public static class SerialiserRegistryFactory
         {
             return new SerialiserRegistry<T>([
                 (ISerialiser<T>) new JsonSimulationSnapshotsSerialiser()
+            ]);
+        }
+        if (typeof(T) == typeof(SimulationSnapshot))
+        {
+            return new SerialiserRegistry<T>([
+                (ISerialiser<T>) new JsonSimulationSnapshotSerialiser()
             ]);
         }
 

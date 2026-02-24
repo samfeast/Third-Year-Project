@@ -14,11 +14,11 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
         return format == DataFormat.JSON && type == DataType.Geometry && version is >= 1 and <= 1;
     }
     
-    public bool Serialise(Stream s, InputGeometry inputGeometry, int version)
+    public string Serialise(InputGeometry inputGeometry, int version, Stream? s = null)
     {
         return version switch
         {
-            1 => SerialiseV1(s, inputGeometry),
+            1 => SerialiseV1(inputGeometry, s),
             _ => throw new NotImplementedException($"JSON geometry serialiser does not implement version {version}")
         };
     }
@@ -35,15 +35,20 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
      *    ]
      * }
      */
-    private bool SerialiseV1(Stream s, InputGeometry inputGeometry)
+    private string SerialiseV1(InputGeometry inputGeometry, Stream? s = null)
     {
         var positive = inputGeometry.Positive.ToListInt();
         List<List<int[]>> negatives = [];
         foreach (var negative in inputGeometry.Negatives)
             negatives.Add(negative.ToListInt());
+
+        var data = new { type = "geometry", version = 1, positive, negatives };
+        if (s == null)
+        {
+            return JsonSerializer.Serialize(data);
+        }
         
-        JsonSerializer.Serialize(s, new {type = "geometry", version = 1, positive, negatives});
-        
-        return true;
+        JsonSerializer.Serialize(s, data);
+        return string.Empty;
     }
 }

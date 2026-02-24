@@ -4,5 +4,6 @@ public enum DataType
 {
     Geometry,
     Mesh,
-    SimulationSnapshots
+    SimulationSnapshots,
+    SimulationSnapshot
 }

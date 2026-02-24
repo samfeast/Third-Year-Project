@@ -11,11 +11,11 @@ public class JsonSimulationSnapshotsSerialiser : ISerialiser<List<SimulationSnap
         return format == DataFormat.JSON && type == DataType.SimulationSnapshots && version is >= 1 and <= 1;
     }
     
-    public bool Serialise(Stream s, List<SimulationSnapshot> snapshots, int version)
+    public string Serialise(List<SimulationSnapshot> snapshots, int version, Stream? s = null)
     {
         return version switch
         {
-            1 => SerialiseV1(s, snapshots),
+            1 => SerialiseV1(snapshots, s),
             _ => throw new NotImplementedException($"JSON simulation snapshots serialiser does not implement version {version}")
         };
     }
@@ -61,9 +61,9 @@ public class JsonSimulationSnapshotsSerialiser : ISerialiser<List<SimulationSnap
     // }
 
 
-    private bool SerialiseV1(Stream s, List<SimulationSnapshot> snapshots)
+    private string SerialiseV1(List<SimulationSnapshot> snapshots, Stream? s = null)
     {
-        var payload = new
+        var data = new
         {
             version = 1,
             snapshots = snapshots.Select(snapshot => new
@@ -84,8 +84,12 @@ public class JsonSimulationSnapshotsSerialiser : ISerialiser<List<SimulationSnap
             })
         };
         
-        JsonSerializer.Serialize(s, payload);
+        if (s == null)
+        {
+            return JsonSerializer.Serialize(data);
+        }
         
-        return true;
+        JsonSerializer.Serialize(s, data);
+        return string.Empty;
     }
 }

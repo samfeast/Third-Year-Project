@@ -14,11 +14,11 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
         return format == DataFormat.JSON && type == DataType.Mesh && version is >= 1 and <= 1;
     }
     
-    public bool Serialise(Stream s, NavMesh navMesh, int version)
+    public string Serialise(NavMesh navMesh, int version, Stream? s = null)
     {
         return version switch
         {
-            1 => SerialiseV1(s, navMesh),
+            1 => SerialiseV1(navMesh, s),
             _ => throw new NotImplementedException($"JSON mesh serialiser does not implement version {version}")
         };
     }
@@ -34,7 +34,7 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
      *    ]
      * }
      */
-    private bool SerialiseV1(Stream s, NavMesh navMesh)
+    private string SerialiseV1(NavMesh navMesh, Stream? s = null)
     {
         List<int[][]> triangles = [];
         foreach (var node in navMesh.Nodes)
@@ -46,9 +46,14 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
             }
             triangles.Add(triangle);
         }
+
+        var data = new { type = "mesh", version = 1, triangles };
+        if (s == null)
+        {
+            return JsonSerializer.Serialize(data);
+        }
         
-        JsonSerializer.Serialize(s, new {type = "mesh", version = 1, triangles});
-        
-        return true;
+        JsonSerializer.Serialize(s, data);
+        return string.Empty;
     }
 }
