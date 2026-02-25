@@ -1,9 +1,10 @@
 import './App.css'
 import SimulationCanvas from './components/SimulationCanvas'
-import { preset1Floorplan } from './presets/preset1'
 import { useSimulationWebSocket } from './hooks/useWebSocket'
 import type { Agent } from './components/DrawAgents'
 import { useState } from 'react'
+
+import { preset1Floorplan } from './presets/preset1'
 import { preset2Floorplan } from './presets/preset2'
 import { preset3Floorplan } from './presets/preset3'
 
