@@ -4,20 +4,21 @@ using Simulator.Core.Geometry.Utils;
 
 namespace Simulator.Core;
 
-public struct SimulationConfig(InputGeometry geometry, double timeStep, int numAgents, int? seed = null)
+public struct SimulationConfig(InputGeometry geometry, double timeStep, int numAgents, int? seed = null, Vector2? target = null)
 {
     public InputGeometry Geometry = geometry;
     public double TimeStep = timeStep;
     public int NumAgents = numAgents;
     public int? Seed = seed;
+    public Vector2? Target = target;
     
     private static readonly InputGeometry Preset1Geometry = new()
     {
         Positive = new Polygon(
         [new Vector2Int(0, 0), 
-            new Vector2Int(500, 0), 
-            new Vector2Int(500, 500), 
-            new Vector2Int(0, 500)]),
+            new Vector2Int(2000, 0), 
+            new Vector2Int(2000, 2000), 
+            new Vector2Int(0, 2000)]),
         Negatives = []
     };
 

@@ -33,8 +33,8 @@ public class SimulationEngine
         // Calculate paths to end positions
         for (int i = 0; i < config.NumAgents; i++)
         {
-            //LiveAgents[i].ComputePath(Mesh, endPoints[i]);
-            LiveAgents[i].ComputePath(Mesh, new Vector2(250, 250));
+            var target = config.Target ?? endPoints[i];
+            LiveAgents[i].ComputePath(Mesh, target);
         }
     }
 
