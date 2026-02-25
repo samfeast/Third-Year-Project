@@ -95,7 +95,7 @@ public class Program
                             Geometry = inputGeometry,
                             TimeStep = 0.1f,
                             NumAgents = 10,
-                            Seed = 101,
+                            Seed = 100,
                         };
                         manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
                     }
@@ -119,6 +119,18 @@ public class Program
                             NumAgents = 80,
                             Seed = 102,
                             Target = new Vector2(250, 250)
+                        };
+                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
+                    }
+                    if (message is { command: "create", preset: 4 })
+                    {
+                        var inputGeometry = readRegistry.Load("../../../scripts/data/vertices4.json");
+                        var config = new SimulationConfig {
+                            Geometry = inputGeometry,
+                            TimeStep = 0.1f,
+                            NumAgents = 100,
+                            Seed = 103,
+                            Target = new Vector2(3000, 2000)
                         };
                         manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
                     }

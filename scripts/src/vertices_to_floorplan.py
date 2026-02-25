@@ -18,7 +18,7 @@ def get_lines(vertices):
     return lines
 
 
-with open("../data/vertices.json", "r") as read_file:
+with open("../data/vertices4.json", "r") as read_file:
     data = json.load(read_file)
 
 flattened_lines = []

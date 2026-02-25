@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { preset1Floorplan } from './presets/preset1'
 import { preset2Floorplan } from './presets/preset2'
 import { preset3Floorplan } from './presets/preset3'
+import { preset4Floorplan } from './presets/preset4'
 
 export type Snapshot = {
   agents: Agent[]
@@ -32,7 +33,10 @@ function App() {
         setFloorplan(preset2Floorplan);
         break;
       case 3:
-        setFloorplan(preset3Floorplan)
+        setFloorplan(preset3Floorplan);
+        break;
+      case 4:
+        setFloorplan(preset4Floorplan);
         break;
     }
   };
@@ -46,6 +50,7 @@ function App() {
         <button onClick={() => handleStart(1)}>Start 1</button>
         <button onClick={() => handleStart(2)}>Start 2</button>
         <button onClick={() => handleStart(3)}>Start 3</button>
+        <button onClick={() => handleStart(4)}>Start 4</button>
       </div>
 
       <SimulationCanvas
