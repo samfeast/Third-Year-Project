@@ -80,60 +80,11 @@ public class Program
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
                     var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    Console.WriteLine($"Received from client: {messageJson}");
+                    Console.WriteLine($"Received from client {clientId}: {messageJson}");
                     var message = JsonSerializer.Deserialize<ClientMessage>(messageJson);
 
 
                     if (message == null) continue;
-
-                    // Crude message processing for hardcoded presets
-                    var readRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
-                    if (message is { command: "create", preset: 1 })
-                    {
-                        var inputGeometry = readRegistry.Load("../../../scripts/data/vertices1.json");
-                        var config = new SimulationConfig {
-                            Geometry = inputGeometry,
-                            TimeStep = 0.1f,
-                            NumAgents = 10,
-                            Seed = 100,
-                        };
-                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
-                    }
-                    if (message is { command: "create", preset: 2 })
-                    {
-                        var inputGeometry = readRegistry.Load("../../../scripts/data/vertices2.json");
-                        var config = new SimulationConfig {
-                            Geometry = inputGeometry,
-                            TimeStep = 0.1f,
-                            NumAgents = 30,
-                            Seed = 101
-                        };
-                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
-                    }
-                    if (message is { command: "create", preset: 3 })
-                    {
-                        var inputGeometry = readRegistry.Load("../../../scripts/data/vertices3.json");
-                        var config = new SimulationConfig {
-                            Geometry = inputGeometry,
-                            TimeStep = 0.1f,
-                            NumAgents = 80,
-                            Seed = 102,
-                            Target = new Vector2(250, 250)
-                        };
-                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
-                    }
-                    if (message is { command: "create", preset: 4 })
-                    {
-                        var inputGeometry = readRegistry.Load("../../../scripts/data/vertices4.json");
-                        var config = new SimulationConfig {
-                            Geometry = inputGeometry,
-                            TimeStep = 0.1f,
-                            NumAgents = 100,
-                            Seed = 103,
-                            Target = new Vector2(3000, 2000)
-                        };
-                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
-                    }
                 }
             }
 

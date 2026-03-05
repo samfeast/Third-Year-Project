@@ -1,64 +1,29 @@
-import './App.css'
-import SimulationCanvas from './components/SimulationCanvas'
-import { useSimulationWebSocket } from './hooks/useWebSocket'
-import type { Agent } from './components/DrawAgents'
-import { useState } from 'react'
-
-import { preset1Floorplan } from './presets/preset1'
-import { preset2Floorplan } from './presets/preset2'
-import { preset3Floorplan } from './presets/preset3'
-import { preset4Floorplan } from './presets/preset4'
-
-export type Snapshot = {
-  agents: Agent[]
-  step: number
-}
+import { Routes, Route, Navigate } from "react-router-dom";
+import { StoreProvider } from "./store/StoreProvider";
+import GuidePage from "./pages/GuidePage";
+import TestPage from "./pages/TestPage";
+import CreatePage from "./pages/CreatePage";
+import ConfigurePage from "./pages/ConfigurePage";
+import SimulatePage from "./pages/SimulatePage";
+import AnalysePage from "./pages/AnalysePage";
+import AppLayout from "./AppLayout";
 
 function App() {
-
-  const { snapshot, sendCommand } = useSimulationWebSocket("ws://localhost:5158/ws");
-
-  const [floorplan, setFloorplan] = useState(preset1Floorplan)
-
-  const handleStart = (presetNumber: number) => {
-    // send command to server
-    sendCommand("create", presetNumber);
-
-    // update floorplan based on preset number
-    switch (presetNumber) {
-      case 1:
-        setFloorplan(preset1Floorplan);
-        break;
-      case 2:
-        setFloorplan(preset2Floorplan);
-        break;
-      case 3:
-        setFloorplan(preset3Floorplan);
-        break;
-      case 4:
-        setFloorplan(preset4Floorplan);
-        break;
-    }
-  };
-  
   return (
-    <div>
-      <h3>Evacuation Simulator</h3>
-      <p>Step: {snapshot.step} ({snapshot.step/10}s)</p>
-
-      <div style={{ marginBottom: "10px" }}>
-        <button onClick={() => handleStart(1)}>Start 1</button>
-        <button onClick={() => handleStart(2)}>Start 2</button>
-        <button onClick={() => handleStart(3)}>Start 3</button>
-        <button onClick={() => handleStart(4)}>Start 4</button>
-      </div>
-
-      <SimulationCanvas
-        floorplan={floorplan}
-        agents={snapshot.agents}
-      />
-    </div>
-  )
+    <StoreProvider>
+      <Routes>
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<Navigate to="/guide" />} />
+          <Route path="guide" element={<GuidePage />} />
+          <Route path="test" element={<TestPage />} />
+          <Route path="create" element={<CreatePage />} />
+          <Route path="configure" element={<ConfigurePage />} />
+          <Route path="simulate" element={<SimulatePage />} />
+          <Route path="analyse" element={<AnalysePage />} />
+        </Route>
+      </Routes>
+    </StoreProvider>
+  );
 }
 
-export default App
+export default App;
