@@ -29,10 +29,10 @@ class WebSocketClient {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
     };
 
+    // Assume all incoming messages are snapshots for now
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       const snapshot = convertSnapshot(msg);
-      console.log(`storing snapshot: ${snapshot.step}`);
       snapshotStore.setSnapshot(snapshot);
     };
   }
