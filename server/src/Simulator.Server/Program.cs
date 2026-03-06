@@ -13,7 +13,13 @@ namespace Simulator.Server;
 public class ClientMessage
 {
     public required string command { get; set; }
-    public int preset { get; set; }
+    public JsonElement payload { get; set; }
+}
+
+public class CreatePayload
+{
+    public double agentDensity  { get; set; }
+    public JsonElement layout { get; set; }
 }
 
 public class Program
@@ -82,9 +88,28 @@ public class Program
                     var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     Console.WriteLine($"Received from client {clientId}: {messageJson}");
                     var message = JsonSerializer.Deserialize<ClientMessage>(messageJson);
-
-
+                    
                     if (message == null) continue;
+
+                    if (message.command == "create")
+                    {
+                        var payload = message.payload.Deserialize<CreatePayload>();
+                        if (payload == null)
+                            throw new Exception("Invalid create payload");
+                        
+                        var deserialiser = new JsonGeometryDeserialiser();
+                        var geometry = deserialiser.Deserialise(payload.layout);
+                        var numAgents = (int)(500 * payload.agentDensity);
+                        
+                        var config = new SimulationConfig {
+                            Geometry = geometry,
+                            TimeStep = 0.1f,
+                            NumAgents = numAgents,
+                            Seed = 100,
+                        };
+                        
+                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
+                    }
                 }
             }
 

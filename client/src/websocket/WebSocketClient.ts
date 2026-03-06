@@ -1,4 +1,5 @@
 import { type Action } from "../store/reducer";
+import { convertSnapshot } from "../utils/ServerSnapshotConverter";
 
 class WebSocketClient {
   private socket?: WebSocket;
@@ -31,9 +32,13 @@ class WebSocketClient {
 
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      console.log(msg);
 
-      // TODO: use this.dispatch() to update state
+      const snapshot = convertSnapshot(msg);
+
+      this.dispatch?.({
+        type: "ADD_SNAPSHOT",
+        payload: snapshot,
+      });
     };
   }
 

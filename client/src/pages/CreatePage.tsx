@@ -2,10 +2,14 @@ import { useState } from "react";
 import ToggleSwitch from "../components/ToggleSwitch";
 import PresetCard from "../components/PresetCard";
 import "./styles/CreatePage.css";
+import { useStore } from "../store/StoreProvider";
+import { emptyLayout, type Layout } from "../store/types";
+import { preset1 } from "../presets/preset1";
 
 export default function CreatePage() {
-  const [showPresets, setShowPresets] = useState(false);
+  const { state, dispatch } = useStore();
 
+  const [showPresets, setShowPresets] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   const exampleImageUrl =
@@ -13,10 +17,26 @@ export default function CreatePage() {
 
   function handlePresetSelect(name: string) {
     setSelectedPreset(name);
+    const agentDensity = state.config.agentDensity;
+    let layout: Layout;
+    switch (name) {
+      case "Preset 1":
+        layout = preset1;
+        break;
+      default:
+        layout = emptyLayout;
+    }
+    dispatch({
+      type: "SET_CONFIG",
+      payload: {
+        agentDensity: agentDensity,
+        layout: layout,
+      },
+    });
   }
 
   const presets = [
-    { name: "Preset 1", description: "Large Area." },
+    { name: "Preset 1", description: "Walkable Area: 625 m2" },
     { name: "Preset 2", description: "Medium Area." },
     { name: "Preset 3", description: "Small Area." },
     { name: "Preset 4", description: "Custom Area." },

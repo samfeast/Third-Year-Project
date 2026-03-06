@@ -36,6 +36,23 @@ public class JsonGeometryDeserialiser : IDeserialiser<InputGeometry>
             _ => throw new NotImplementedException($"JSON geometry deserialiser does not implement version {version}")
         };
     }
+
+    public InputGeometry Deserialise(JsonElement root)
+    {
+        if (!root.TryGetProperty("version", out var versionProp) ||
+            versionProp.ValueKind != JsonValueKind.Number)
+        {
+            throw new InvalidDataException("Missing or invalid version field.");
+        }
+        
+        var version = versionProp.GetInt32();
+        
+        return version switch
+        {
+            1 => DeserialiseV1(root),
+            _ => throw new NotImplementedException($"JSON geometry deserialiser does not implement version {version}")
+        };
+    }
     
     /* Format:
      * {

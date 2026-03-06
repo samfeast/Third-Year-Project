@@ -2,6 +2,7 @@
 export type AppState = {
   connectionStatus: "disconnected" | "connecting" | "connected";
   config: Config;
+  snapshots: Snapshot[];
 };
 
 export type Config = {
@@ -9,14 +10,21 @@ export type Config = {
   layout: Layout;
 };
 
-type Layout = {
+export type Layout = {
   type: string;
   version: number;
   positive: Point[];
   negatives: Point[][];
 };
 
-type Point = [number, number];
+export type Point = [number, number];
+
+export type Snapshot = {
+  step: number;
+  final: boolean;
+  positions: Point[];
+  speeds: number[];
+};
 
 export const emptyLayout: Layout = {
   type: "geometry",
