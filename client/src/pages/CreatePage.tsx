@@ -5,6 +5,9 @@ import "./styles/CreatePage.css";
 import { useStore } from "../store/StoreProvider";
 import { emptyLayout, type Layout } from "../store/types";
 import { preset1 } from "../presets/preset1";
+import { preset2 } from "../presets/preset2";
+import { preset3 } from "../presets/preset3";
+import { preset4 } from "../presets/preset4";
 
 export default function CreatePage() {
   const { state, dispatch } = useStore();
@@ -23,6 +26,16 @@ export default function CreatePage() {
       case "Preset 1":
         layout = preset1;
         break;
+      case "Preset 2":
+        layout = preset2;
+        break;
+
+      case "Preset 3":
+        layout = preset3;
+        break;
+      case "Preset 4":
+        layout = preset4;
+        break;
       default:
         layout = emptyLayout;
     }
@@ -37,9 +50,9 @@ export default function CreatePage() {
 
   const presets = [
     { name: "Preset 1", description: "Walkable Area: 625 m2" },
-    { name: "Preset 2", description: "Medium Area." },
-    { name: "Preset 3", description: "Small Area." },
-    { name: "Preset 4", description: "Custom Area." },
+    { name: "Preset 2", description: "Walkable Area: 865 m2" },
+    { name: "Preset 3", description: "Walkable Area: ?" },
+    { name: "Preset 4", description: "Walkable Area: ?" },
   ];
 
   return (
