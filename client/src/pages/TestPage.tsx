@@ -1,15 +1,16 @@
 import { useStore } from "../store/StoreProvider";
-import { sendStatus } from "../websocket/simulationCommands";
+import { emptyLayout } from "../store/types";
+import { create } from "../websocket/simulationCommands";
 
 export default function TestPage() {
   const { state, dispatch } = useStore();
 
-  function handleStateUpdate(inputStatus: "idle" | "running" | "finished") {
+  function handleStateUpdate(agentDensity: number) {
     dispatch({
-      type: "SET_SIMULATION",
+      type: "SET_CONFIG",
       payload: {
-        id: "abc",
-        status: inputStatus,
+        agentDensity: agentDensity,
+        layout: emptyLayout,
       },
     });
   }
@@ -18,20 +19,18 @@ export default function TestPage() {
     <div>
       <h1>Test</h1>
 
-      <button onClick={() => sendStatus(state.simulation?.status)}>
-        Send status over WS
+      <button onClick={() => create(state.config)}>Send layout over WS</button>
+      <button onClick={() => handleStateUpdate(0.1)}>
+        Set agent density 0.1
       </button>
-      <button onClick={() => handleStateUpdate("running")}>
-        Set simulation running
+      <button onClick={() => handleStateUpdate(0.3)}>
+        Set agent density 0.3
       </button>
-      <button onClick={() => handleStateUpdate("idle")}>
-        Set simulation idle
+      <button onClick={() => handleStateUpdate(0.6)}>
+        Set agent density 0.6
       </button>
-      <button onClick={() => handleStateUpdate("finished")}>
-        Set simulation finished
-      </button>
-      <p>Current id: {state.simulation?.id}</p>
-      <p>Current status: {state.simulation?.status}</p>
+      <p>Current agent density {state.config.agentDensity}</p>
+      <p>Websocket connection: {state.connectionStatus}</p>
     </div>
   );
 }

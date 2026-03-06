@@ -1,0 +1,8 @@
+.preset-grid {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding: 8rem 2rem 2rem 2rem;
+  justify-content: center;
+  vertical-align: middle;
+}

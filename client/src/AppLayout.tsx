@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import { useStore } from "./store/StoreProvider";
 import { useEffect } from "react";
 import { websocketClient } from "./websocket/WebSocketClient";
+import "./App.css";
 
 export default function AppLayout() {
   const { dispatch } = useStore();
@@ -15,7 +16,7 @@ export default function AppLayout() {
     <div>
       <Navbar />
 
-      <main>
+      <main className="main-content">
         <Outlet />
       </main>
     </div>

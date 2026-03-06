@@ -1,0 +1,31 @@
+.card {
+  border: 6px solid #ccc;
+  border-radius: 32px;
+  width: 320px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  background-color: #3f3f3f;
+}
+
+.card.selected {
+  border-color: #007bff;
+}
+
+.name {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.description {
+  font-size: 14px;
+  color: #c4c4c4;
+}
