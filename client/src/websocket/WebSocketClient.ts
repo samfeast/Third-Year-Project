@@ -1,16 +1,15 @@
 import { type Action } from "../store/reducer";
+import { snapshotStore } from "../store/snapshotStore";
 import { convertSnapshot } from "../utils/ServerSnapshotConverter";
 
 class WebSocketClient {
   private socket?: WebSocket;
-  private dispatch?: React.Dispatch<Action>;
   private connected = false;
 
   connect(dispatch: React.Dispatch<Action>) {
     if (this.connected) return;
 
     this.connected = true;
-    this.dispatch = dispatch;
 
     this.socket = new WebSocket("ws://localhost:5158/ws");
 
@@ -32,13 +31,9 @@ class WebSocketClient {
 
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-
       const snapshot = convertSnapshot(msg);
-
-      this.dispatch?.({
-        type: "ADD_SNAPSHOT",
-        payload: snapshot,
-      });
+      console.log(`storing snapshot: ${snapshot.step}`);
+      snapshotStore.setSnapshot(snapshot);
     };
   }
 

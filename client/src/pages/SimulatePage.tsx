@@ -1,11 +1,13 @@
 import { useStore } from "../store/StoreProvider";
+import { useSnapshotBuffer } from "../store/useSnapshotBuffer";
 import { create } from "../websocket/simulationCommands";
-import "./styles/SimulationPage.css";
+import "./styles/SimulatePage.css";
 
 export default function SimulatePage() {
   const { state } = useStore();
+  const snapshots = useSnapshotBuffer();
 
-  const latest = state.snapshots[state.snapshots.length - 1];
+  const latest = snapshots[snapshots.length - 1];
   const firstFive = latest?.positions?.slice(0, 5) ?? [];
 
   return (
@@ -13,7 +15,7 @@ export default function SimulatePage() {
       <button className="button" onClick={() => create(state.config)}>
         Start Simulation
       </button>
-      <p>Snapshots received: {state.snapshots.length}</p>
+      <p>Snapshots received: {snapshots.length}</p>
 
       {latest ? (
         <div>
