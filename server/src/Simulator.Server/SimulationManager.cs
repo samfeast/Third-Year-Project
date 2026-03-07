@@ -7,25 +7,9 @@ namespace Simulator.Server;
 
 public class SimulationManager
 {
-    public class Simulator(SimulationEngine engine, int priority)
-    {
-        public readonly SimulationEngine Engine = engine;
-        public int Priority = priority;
-        public SimulationStatus Status = SimulationStatus.Running;
-    }
-
-    public enum SimulationStatus
-    {
-        Running,
-        Paused,
-        Finished
-    }
-
     private readonly Dictionary<Guid, Simulator> _simulators = new();
     private readonly Dictionary<Guid, ConcurrentQueue<ISimulationCommand>> _simulationCommandQueues = new();
     private readonly ConcurrentQueue<IManagerCommand> _simulationManagerCommands = new();
-
-    public event Action<Guid, SimulationSnapshot>? SnapshotProduced;
     
     public async Task RunLoop(CancellationToken token)
     {
@@ -36,23 +20,32 @@ public class SimulationManager
             // Step all running simulations
             foreach (var (id, simulator) in _simulators)
             {
-                var engine = simulator.Engine;
-                ProcessSimulationCommands(id);
-
-                if (simulator.Status != SimulationStatus.Running) continue;
-                
-                var snapshot = engine.StepSimulation();
-                if (snapshot.AllComplete)
-                {
-                    simulator.Status = SimulationStatus.Finished;
-                }
-                
-                SnapshotProduced?.Invoke(id, snapshot);
+                StepSimulator(id, simulator);
             }
-
-            // Wait 50ms between steps to avoid uncontrolled simulation
-            await Task.Delay(50, token);
+            
+            await Task.Yield();
         }
+    }
+
+    public Simulator GetSimulator(Guid id)
+    {
+        return _simulators[id];
+    }
+
+    private void StepSimulator(Guid id, Simulator simulator)
+    {
+        var engine = simulator.Engine;
+        ProcessSimulationCommands(id);
+
+        if (simulator.Status != SimulationStatus.Running) return;
+                
+        var snapshot = engine.StepSimulation();
+        if (snapshot.AllComplete)
+        {
+            simulator.Status = SimulationStatus.Finished;
+        }
+                
+        simulator.AddSnapshot(snapshot);
     }
     
     // Enqueue manager-level command

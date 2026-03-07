@@ -7,19 +7,15 @@ using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
 using Simulator.IO.Json;
 using Simulator.Server.ManagerCommands;
+using Simulator.Server.Payloads;
 
 namespace Simulator.Server;
 
 public class ClientMessage
 {
+    public required string clientId { get; set; }
     public required string command { get; set; }
     public JsonElement payload { get; set; }
-}
-
-public class CreatePayload
-{
-    public double agentDensity  { get; set; }
-    public JsonElement layout { get; set; }
 }
 
 public class Program
@@ -49,11 +45,6 @@ public class Program
         app.UseWebSockets();
 
         var manager = app.Services.GetRequiredService<SimulationManager>();
-        manager.SnapshotProduced += (id, snapshot) =>
-        {
-            if (snapshot.Step % 100 == 0 || snapshot.AllComplete)
-                Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Sim {id} Tick {snapshot.Step}");
-        };
 
         app.MapControllers();
 
@@ -68,11 +59,7 @@ public class Program
 
             var webSocket = await context.WebSockets.AcceptWebSocketAsync();
             
-            var clientId = Guid.NewGuid();
-            Console.WriteLine($"Client {clientId} connected via WebSocket");
-
-            // Subscribe to SnapshotProduced
-            manager.SnapshotProduced += SendSnapshots;
+            Console.WriteLine("New websocket connection established");
 
             var buffer = new byte[1024];
             while (!context.RequestAborted.IsCancellationRequested && webSocket.State == WebSocketState.Open)
@@ -86,49 +73,69 @@ public class Program
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
                     var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    Console.WriteLine($"Received from client {clientId}: {messageJson}");
                     var message = JsonSerializer.Deserialize<ClientMessage>(messageJson);
                     
                     if (message == null) continue;
+                    
+                    var clientId = Guid.Parse(message.clientId);
+                    
+                    Console.WriteLine($"Received message from client {clientId}: {messageJson}");
+                    
 
-                    if (message.command == "create")
+                    switch (message.command)
                     {
-                        var payload = message.payload.Deserialize<CreatePayload>();
-                        if (payload == null)
-                            throw new Exception("Invalid create payload");
-                        
-                        var deserialiser = new JsonGeometryDeserialiser();
-                        var geometry = deserialiser.Deserialise(payload.layout);
-                        var numAgents = (int)(500 * payload.agentDensity);
-                        
-                        var config = new SimulationConfig {
-                            Geometry = geometry,
-                            TimeStep = 0.1f,
-                            NumAgents = numAgents,
-                            Seed = 100,
-                        };
-                        
-                        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
+                        case "create":
+                            HandleCreate(manager, clientId, message.payload);
+                            break;
+                        case "get-snapshots":
+                            HandleGetSnapshots(manager, clientId, message.payload);
+                            break;
+                        default:
+                            Console.WriteLine($"Unknown command received: {message.command}");
+                            break;
                     }
                 }
             }
-
-            // Unsubscribe from SnapshotProduced
-            manager.SnapshotProduced -= SendSnapshots;
-            Console.WriteLine($"Client {clientId} disconnected");
-            return;
-
-            void SendSnapshots(Guid id, SimulationSnapshot snapshot)
-            {
-                if (webSocket.State != WebSocketState.Open) return;
-
-                var serialiser = new JsonSimulationSnapshotSerialiser();
-                var data = serialiser.Serialise(snapshot, 1);
-                var bytes = Encoding.UTF8.GetBytes(data);
-                // Could drop exceptions here
-                _ = webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, context.RequestAborted);
-            }
+            Console.WriteLine($"Client disconnected");
         });
+    }
+
+    private static void HandleCreate(SimulationManager manager, Guid clientId, JsonElement payload)
+    {
+        var data = payload.Deserialize<CreatePayload>();
+        
+        if (data == null)
+            throw new Exception("Invalid create payload");
+                        
+        var deserialiser = new JsonGeometryDeserialiser();
+        var geometry = deserialiser.Deserialise(data.layout);
+        var numAgents = (int)(500 * data.agentDensity);
+                        
+        var config = new SimulationConfig {
+            Geometry = geometry,
+            TimeStep = 0.1f,
+            NumAgents = numAgents,
+            Seed = 100,
+        };
+                        
+        manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
+    }
+
+    private static void HandleGetSnapshots(SimulationManager manager, Guid clientId, JsonElement payload)
+    {
+        var data = payload.Deserialize<GetSnapshotsPayload>();
+
+        if (data == null)
+            throw new Exception("Invalid get-snapshots payload");
+
+        // Calculate buffer size needed for 5 seconds of playback capped at 200 steps
+        var targetBufferSize = Math.Min((int)(50 * data.playbackSpeed), 200);
+        var numSteps = targetBufferSize - (data.lastBufferedStep - data.lastDisplayedStep);
+
+        var simulator = manager.GetSimulator(clientId);
+        var snapshots = simulator.GetSnapshots(data.lastBufferedStep, numSteps);
+        
+        // Serialise snapshots and send over WS
     }
 }
 

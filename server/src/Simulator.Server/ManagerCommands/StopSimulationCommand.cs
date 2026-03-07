@@ -6,7 +6,6 @@ public class StopSimulationCommand(Guid id) : IManagerCommand
 
     public void Apply(SimulationManager manager)
     {
-        Console.WriteLine("Her2e");
         manager.StopSimulationInternal(this);
     }
 }
