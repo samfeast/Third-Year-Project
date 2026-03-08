@@ -86,13 +86,18 @@ public class Program
                     switch (message.Command)
                     {
                         case "create":
-                            var data = message.Payload.Deserialize<CreatePayload>();
-                            if (data == null)
+                            var createPayload = message.Payload.Deserialize<CreatePayload>();
+                            if (createPayload == null)
                                 throw new Exception("Missing payload in create command");
-                            HandleCreate(manager, clientId, data);
+                            
+                            HandleCreate(manager, clientId, createPayload);
                             break;
                         case "get-snapshots":
-                            var bytes = HandleGetSnapshots(manager, clientId, message.Payload);
+                            var getSnapshotsPayload = message.Payload.Deserialize<GetSnapshotsPayload>();
+                            if (getSnapshotsPayload == null)
+                                throw new Exception("Missing payload in get-snapshots command");
+                            
+                            var bytes = HandleGetSnapshots(manager, clientId, getSnapshotsPayload);
                             await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, context.RequestAborted);
                             break;
                         default:
@@ -107,10 +112,11 @@ public class Program
 
     private static void HandleCreate(SimulationManager manager, Guid clientId, CreatePayload data)
     {
+        // Load json layout into InputGeometry object
         var inputGeometryReadRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
         var geometry = inputGeometryReadRegistry.LoadFromJson(data.layout);
 
-        var numAgents = (int)(500 * data.agentDensity);
+        var numAgents = (int)(geometry.Area * data.agentDensity);
                         
         var config = new SimulationConfig {
             Geometry = geometry,
@@ -122,13 +128,8 @@ public class Program
         manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
     }
 
-    private static byte[] HandleGetSnapshots(SimulationManager manager, Guid clientId, JsonElement payload)
+    private static byte[] HandleGetSnapshots(SimulationManager manager, Guid clientId, GetSnapshotsPayload data)
     {
-        var data = payload.Deserialize<GetSnapshotsPayload>();
-
-        if (data == null)
-            throw new Exception("Invalid get-snapshots payload");
-
         // Calculate buffer size capped at 200 steps
         var targetBufferSize = Math.Min((int)(data.playbackSpeed * TARGET_BUFFER_DURATION / TIME_STEP), 200);
         // Work out number of steps needed to fill buffer

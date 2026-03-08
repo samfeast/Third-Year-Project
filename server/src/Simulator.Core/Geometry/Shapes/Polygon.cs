@@ -44,6 +44,23 @@ public class Polygon
 
         return inside;
     }
+    
+    // Get the area of the polygon using the shoelace formula
+    public double GetArea()
+    {
+        if (Vertices.Count < 3)
+            return 0;
+
+        double area = 0;
+        for (int i = 0; i < Vertices.Count; i++)
+        {
+            var current = Vertices[i];
+            var next = Vertices[(i + 1) % Vertices.Count]; // Wrap around to first vertex
+            area += (current.X * next.Y) - (next.X * current.Y);
+        }
+
+        return Math.Abs((float)area) / 2.0;
+    }
 
     public List<int[]> ToListInt()
     {
