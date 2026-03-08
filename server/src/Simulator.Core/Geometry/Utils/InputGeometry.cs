@@ -15,9 +15,7 @@ public record InputGeometry
         
         var area = positive.GetArea();
         foreach (var negative in negatives)
-        {
             area -=  negative.GetArea();
-        }
 
         Area = area;
     }

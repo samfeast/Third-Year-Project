@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Simulator.Core;
-using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
 
@@ -15,11 +14,8 @@ public class Program
         string meshOutPath = args[1];
         string snapshotsOutPath = args[2];
 
-        // Get a registry with all the deserialisers which can parse InputGeometry
-        var readRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
-
-        // Load the input geometry using whichever deserialiser works
-        var inputGeometry = readRegistry.LoadFromFile(inPath);
+        // Load file into InputGeometry object
+        var inputGeometry = inPath.Deserialise<InputGeometry>();
         
         System.Console.WriteLine("Geometry loaded");
 
@@ -34,9 +30,8 @@ public class Program
         
         System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Nodes.Count} triangles in {watch.ElapsedMilliseconds}ms");
         
-        // Save the navmesh using whichever serialiser works
-        var meshWriteRegistry = SerialiserRegistryFactory.Default<NavMesh>();
-        meshWriteRegistry.Save(meshOutPath, simulator.Mesh, 1);
+        // Save the navmesh to meshOutPath
+        simulator.Mesh.Save(meshOutPath, 1);
         
         watch = Stopwatch.StartNew();
 
@@ -60,8 +55,7 @@ public class Program
                 break;
             }
         }
-        
-        var snapshotsWriteRegistry = SerialiserRegistryFactory.Default<List<SimulationSnapshot>>();
-        snapshotsWriteRegistry.Save(snapshotsOutPath, snapshots, 1);
+
+        snapshots.Save(snapshotsOutPath, 1);
     }
 }

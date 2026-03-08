@@ -9,19 +9,19 @@ public class DeserialiserRegistry<T>(IEnumerable<IDeserialiser<T>> deserialisers
 {
     private readonly List<IDeserialiser<T>> _deserialisers = deserialisers.ToList();
     
-    public T Load(Stream stream)
+    internal T Load(Stream stream)
     {
         var deserialiser = GetDeserialiser(stream);
         return deserialiser.Deserialise(stream);
     }
     
-    public T LoadFromFile(string path)
+    internal T Load(string path)
     {
         using var stream = File.OpenRead(path);
         return Load(stream);
     }
 
-    public T LoadFromJson(JsonElement element)
+    internal T Load(JsonElement element)
     {
         using var stream = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(element));
         return Load(stream);

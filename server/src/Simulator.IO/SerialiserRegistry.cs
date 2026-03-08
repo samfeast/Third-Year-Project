@@ -10,7 +10,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
 {
     private readonly List<ISerialiser<T>> _serialisers = serialisers.ToList();
     
-    public void Save(string path, T data, int version)
+    internal void Save(string path, T data, int version)
     {
         DataFormat format = Path.GetExtension(path)?.ToLowerInvariant() switch
         {
@@ -22,7 +22,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
         File.WriteAllBytes(path, bytes);
     }
 
-    public byte[] Serialise(DataFormat format, T data, int version)
+    internal byte[] Serialise(DataFormat format, T data, int version)
     {
         var serialiser = GetSerialiser(format, version);
         return serialiser.Serialise(data, version);

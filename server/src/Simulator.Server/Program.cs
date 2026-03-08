@@ -4,7 +4,6 @@ using System.Text.Json;
 using Simulator.Core;
 using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
-using Simulator.IO.Json;
 using Simulator.IO.Utils;
 using Simulator.Server.ManagerCommands;
 using Simulator.Server.Payloads;
@@ -113,8 +112,7 @@ public class Program
     private static void HandleCreate(SimulationManager manager, Guid clientId, CreatePayload data)
     {
         // Load json layout into InputGeometry object
-        var inputGeometryReadRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
-        var geometry = inputGeometryReadRegistry.LoadFromJson(data.layout);
+        var geometry = data.layout.Deserialise<InputGeometry>();
 
         var numAgents = (int)(geometry.Area * data.agentDensity);
                         
@@ -138,8 +136,7 @@ public class Program
         var simulator = manager.GetSimulator(clientId);
         var snapshots = simulator.GetSnapshots(data.lastBufferedStep, numSteps);
         
-        var snapshotsWriteRegistry = SerialiserRegistryFactory.Default<List<SimulationSnapshot>>();
-        return snapshotsWriteRegistry.Serialise(DataFormat.JSON, snapshots, 1);
+        return snapshots.Serialise(DataFormat.JSON, 1);
     }
 }
 
