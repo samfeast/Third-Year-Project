@@ -32,8 +32,9 @@ class WebSocketClient {
     // Assume all incoming messages are snapshots for now
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      const snapshot = convertSnapshot(msg);
-      snapshotStore.setSnapshot(snapshot);
+      console.log(msg);
+      //const snapshot = convertSnapshot(msg);
+      //snapshotStore.setSnapshot(snapshot);
     };
   }
 

@@ -2,10 +2,10 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using Simulator.Core;
-using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
 using Simulator.IO.Json;
+using Simulator.IO.Utils;
 using Simulator.Server.ManagerCommands;
 using Simulator.Server.Payloads;
 
@@ -86,7 +86,10 @@ public class Program
                     switch (message.Command)
                     {
                         case "create":
-                            HandleCreate(manager, clientId, message.Payload);
+                            var data = message.Payload.Deserialize<CreatePayload>();
+                            if (data == null)
+                                throw new Exception("Missing payload in create command");
+                            HandleCreate(manager, clientId, data);
                             break;
                         case "get-snapshots":
                             var bytes = HandleGetSnapshots(manager, clientId, message.Payload);
@@ -102,15 +105,11 @@ public class Program
         });
     }
 
-    private static void HandleCreate(SimulationManager manager, Guid clientId, JsonElement payload)
+    private static void HandleCreate(SimulationManager manager, Guid clientId, CreatePayload data)
     {
-        var data = payload.Deserialize<CreatePayload>();
-        
-        if (data == null)
-            throw new Exception("Invalid create payload");
-                        
-        var deserialiser = new JsonGeometryDeserialiser();
-        var geometry = deserialiser.Deserialise(data.layout);
+        var inputGeometryReadRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
+        var geometry = inputGeometryReadRegistry.LoadFromJson(data.layout);
+
         var numAgents = (int)(500 * data.agentDensity);
                         
         var config = new SimulationConfig {
@@ -136,12 +135,10 @@ public class Program
         var numSteps = targetBufferSize - (data.lastBufferedStep - data.lastDisplayedStep);
 
         var simulator = manager.GetSimulator(clientId);
-        
-        var serialiser = new JsonSimulationSnapshotsSerialiser();
         var snapshots = simulator.GetSnapshots(data.lastBufferedStep, numSteps);
-        var snapshotsJson = serialiser.Serialise(snapshots, 1);
         
-        return Encoding.UTF8.GetBytes(snapshotsJson);
+        var snapshotsWriteRegistry = SerialiserRegistryFactory.Default<List<SimulationSnapshot>>();
+        return snapshotsWriteRegistry.Serialise(DataFormat.JSON, snapshots, 1);
     }
 }
 

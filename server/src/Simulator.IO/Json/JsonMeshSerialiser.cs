@@ -7,18 +7,18 @@ namespace Simulator.IO.Json;
 // Serialisation logic for all JSON navmesh writers
 // When adding a new version, update Version bounds in CanWrite(), add version to switch in Serialise(), and implement
 // SerialiseVn()
-public class JsonMeshSerialiser : ISerialiser<NavMesh>
+internal class JsonMeshSerialiser : ISerialiser<NavMesh>
 {
     public bool CanWrite(DataFormat format, DataType type, int version)
     {
         return format == DataFormat.JSON && type == DataType.Mesh && version is >= 1 and <= 1;
     }
     
-    public string Serialise(NavMesh navMesh, int version, Stream? s = null)
+    public byte[] Serialise(NavMesh navMesh, int version)
     {
         return version switch
         {
-            1 => SerialiseV1(navMesh, s),
+            1 => SerialiseV1(navMesh),
             _ => throw new NotImplementedException($"JSON mesh serialiser does not implement version {version}")
         };
     }
@@ -34,7 +34,7 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
      *    ]
      * }
      */
-    private string SerialiseV1(NavMesh navMesh, Stream? s = null)
+    private byte[] SerialiseV1(NavMesh navMesh)
     {
         List<int[][]> triangles = [];
         foreach (var node in navMesh.Nodes)
@@ -48,12 +48,7 @@ public class JsonMeshSerialiser : ISerialiser<NavMesh>
         }
 
         var data = new { type = "mesh", version = 1, triangles };
-        if (s == null)
-        {
-            return JsonSerializer.Serialize(data);
-        }
-        
-        JsonSerializer.Serialize(s, data);
-        return string.Empty;
+
+        return JsonSerializer.SerializeToUtf8Bytes(data);
     }
 }

@@ -19,7 +19,7 @@ public class Program
         var readRegistry = DeserialiserRegistryFactory.Default<InputGeometry>();
 
         // Load the input geometry using whichever deserialiser works
-        var inputGeometry = readRegistry.Load(inPath);
+        var inputGeometry = readRegistry.LoadFromFile(inPath);
         
         System.Console.WriteLine("Geometry loaded");
 
@@ -36,8 +36,7 @@ public class Program
         
         // Save the navmesh using whichever serialiser works
         var meshWriteRegistry = SerialiserRegistryFactory.Default<NavMesh>();
-        var meshWriteSuccess = meshWriteRegistry.Save(meshOutPath, simulator.Mesh, 1);
-        Debug.Assert(meshWriteSuccess, "Failed to write input geometry");
+        meshWriteRegistry.Save(meshOutPath, simulator.Mesh, 1);
         
         watch = Stopwatch.StartNew();
 
@@ -63,7 +62,6 @@ public class Program
         }
         
         var snapshotsWriteRegistry = SerialiserRegistryFactory.Default<List<SimulationSnapshot>>();
-        var snapshotsWriteSuccess = snapshotsWriteRegistry.Save(snapshotsOutPath, snapshots, 1);
-        Debug.Assert(snapshotsWriteSuccess, "Failed to write simulation snapshots");
+        snapshotsWriteRegistry.Save(snapshotsOutPath, snapshots, 1);
     }
 }

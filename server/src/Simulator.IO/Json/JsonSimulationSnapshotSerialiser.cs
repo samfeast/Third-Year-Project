@@ -4,23 +4,24 @@ using Simulator.IO.Utils;
 
 namespace Simulator.IO.Json;
 
-public class JsonSimulationSnapshotSerialiser : ISerialiser<SimulationSnapshot>
+internal class JsonSimulationSnapshotSerialiser : ISerialiser<SimulationSnapshot>
 {
     public bool CanWrite(DataFormat format, DataType type, int version)
     {
         return format == DataFormat.JSON && type == DataType.SimulationSnapshot && version is >= 1 and <= 1;
     }
     
-    public string Serialise(SimulationSnapshot snapshot, int version, Stream? s = null)
+    public byte[] Serialise(SimulationSnapshot snapshot, int version)
     {
         return version switch
         {
-            1 => SerialiseV1(snapshot, s),
-            _ => throw new NotImplementedException($"JSON simulation snapshot serialiser does not implement version {version}")
+            1 => SerialiseV1(snapshot),
+            _ => throw new NotImplementedException(
+                $"JSON simulation snapshot serialiser does not implement version {version}")
         };
     }
     
-    private string SerialiseV1(SimulationSnapshot snapshot, Stream? s = null)
+    private byte[] SerialiseV1(SimulationSnapshot snapshot)
     {
         var data = new
         {
@@ -43,13 +44,6 @@ public class JsonSimulationSnapshotSerialiser : ISerialiser<SimulationSnapshot>
             }
         };
         
-        
-        if (s == null)
-        {
-            return JsonSerializer.Serialize(data);
-        }
-        
-        JsonSerializer.Serialize(s, data);
-        return string.Empty;
+        return JsonSerializer.SerializeToUtf8Bytes(data);
     }
 }

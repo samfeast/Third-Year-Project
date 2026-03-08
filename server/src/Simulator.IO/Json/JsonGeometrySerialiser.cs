@@ -7,18 +7,18 @@ namespace Simulator.IO.Json;
 // Serialisation logic for all JSON geometry writers
 // When adding a new version, update Version bounds in CanWrite(), add version to switch in Serialise(), and implement
 // SerialiseVn()
-public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
+internal class JsonGeometrySerialiser : ISerialiser<InputGeometry>
 {
     public bool CanWrite(DataFormat format, DataType type, int version)
     {
         return format == DataFormat.JSON && type == DataType.Geometry && version is >= 1 and <= 1;
     }
     
-    public string Serialise(InputGeometry inputGeometry, int version, Stream? s = null)
+    public byte[] Serialise(InputGeometry inputGeometry, int version)
     {
         return version switch
         {
-            1 => SerialiseV1(inputGeometry, s),
+            1 => SerialiseV1(inputGeometry),
             _ => throw new NotImplementedException($"JSON geometry serialiser does not implement version {version}")
         };
     }
@@ -35,7 +35,7 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
      *    ]
      * }
      */
-    private string SerialiseV1(InputGeometry inputGeometry, Stream? s = null)
+    private byte[] SerialiseV1(InputGeometry inputGeometry)
     {
         var positive = inputGeometry.Positive.ToListInt();
         List<List<int[]>> negatives = [];
@@ -43,12 +43,7 @@ public class JsonGeometrySerialiser : ISerialiser<InputGeometry>
             negatives.Add(negative.ToListInt());
 
         var data = new { type = "geometry", version = 1, positive, negatives };
-        if (s == null)
-        {
-            return JsonSerializer.Serialize(data);
-        }
-        
-        JsonSerializer.Serialize(s, data);
-        return string.Empty;
+
+        return JsonSerializer.SerializeToUtf8Bytes(data);
     }
 }
