@@ -11,6 +11,11 @@ public class SimulationManager
     private readonly Dictionary<Guid, ConcurrentQueue<ISimulationCommand>> _simulationCommandQueues = new();
     private readonly ConcurrentQueue<IManagerCommand> _simulationManagerCommands = new();
     
+    public Simulator GetSimulator(Guid id)
+    {
+        return _simulators[id];
+    }
+    
     public async Task RunLoop(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -25,11 +30,6 @@ public class SimulationManager
             
             await Task.Yield();
         }
-    }
-
-    public Simulator GetSimulator(Guid id)
-    {
-        return _simulators[id];
     }
 
     private void StepSimulator(Guid id, Simulator simulator)

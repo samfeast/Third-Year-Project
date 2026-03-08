@@ -19,7 +19,7 @@ public class Simulator(SimulationEngine engine, int priority)
         }
     }
 
-    public IReadOnlyList<SimulationSnapshot> GetSnapshots(int startStep, int numSteps)
+    public List<SimulationSnapshot> GetSnapshots(int startStep, int numSteps)
     {
         lock (_lock)
         {

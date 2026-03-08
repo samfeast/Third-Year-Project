@@ -13,13 +13,15 @@ namespace Simulator.Server;
 
 public class ClientMessage
 {
-    public required string clientId { get; set; }
-    public required string command { get; set; }
-    public JsonElement payload { get; set; }
+    public required string ClientId { get; set; }
+    public required string Command { get; set; }
+    public JsonElement Payload { get; set; }
 }
 
 public class Program
 {
+    private const double TARGET_BUFFER_DURATION = 5.0f;
+    private const double TIME_STEP = 0.1f;
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -77,26 +79,26 @@ public class Program
                     
                     if (message == null) continue;
                     
-                    var clientId = Guid.Parse(message.clientId);
+                    var clientId = Guid.Parse(message.ClientId);
                     
                     Console.WriteLine($"Received message from client {clientId}: {messageJson}");
-                    
 
-                    switch (message.command)
+                    switch (message.Command)
                     {
                         case "create":
-                            HandleCreate(manager, clientId, message.payload);
+                            HandleCreate(manager, clientId, message.Payload);
                             break;
                         case "get-snapshots":
-                            HandleGetSnapshots(manager, clientId, message.payload);
+                            var bytes = HandleGetSnapshots(manager, clientId, message.Payload);
+                            await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, context.RequestAborted);
                             break;
                         default:
-                            Console.WriteLine($"Unknown command received: {message.command}");
+                            Console.WriteLine($"Unknown command received: {message.Command}");
                             break;
                     }
                 }
             }
-            Console.WriteLine($"Client disconnected");
+            Console.WriteLine("Client disconnected");
         });
     }
 
@@ -113,7 +115,7 @@ public class Program
                         
         var config = new SimulationConfig {
             Geometry = geometry,
-            TimeStep = 0.1f,
+            TimeStep = TIME_STEP,
             NumAgents = numAgents,
             Seed = 100,
         };
@@ -121,21 +123,25 @@ public class Program
         manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
     }
 
-    private static void HandleGetSnapshots(SimulationManager manager, Guid clientId, JsonElement payload)
+    private static byte[] HandleGetSnapshots(SimulationManager manager, Guid clientId, JsonElement payload)
     {
         var data = payload.Deserialize<GetSnapshotsPayload>();
 
         if (data == null)
             throw new Exception("Invalid get-snapshots payload");
 
-        // Calculate buffer size needed for 5 seconds of playback capped at 200 steps
-        var targetBufferSize = Math.Min((int)(50 * data.playbackSpeed), 200);
+        // Calculate buffer size capped at 200 steps
+        var targetBufferSize = Math.Min((int)(data.playbackSpeed * TARGET_BUFFER_DURATION / TIME_STEP), 200);
+        // Work out number of steps needed to fill buffer
         var numSteps = targetBufferSize - (data.lastBufferedStep - data.lastDisplayedStep);
 
         var simulator = manager.GetSimulator(clientId);
-        var snapshots = simulator.GetSnapshots(data.lastBufferedStep, numSteps);
         
-        // Serialise snapshots and send over WS
+        var serialiser = new JsonSimulationSnapshotsSerialiser();
+        var snapshots = simulator.GetSnapshots(data.lastBufferedStep, numSteps);
+        var snapshotsJson = serialiser.Serialise(snapshots, 1);
+        
+        return Encoding.UTF8.GetBytes(snapshotsJson);
     }
 }
 
