@@ -4,7 +4,7 @@ using Simulator.Core.Geometry.Shapes;
 
 namespace Simulator.Core.Geometry;
 
-public class NavMesh(int gridSize)
+public class NavMesh(int cellSize)
 {
     public struct Node(Triangle triangle)
     {
@@ -22,7 +22,7 @@ public class NavMesh(int gridSize)
     }
     
     public readonly List<Node> Nodes = [];
-    public readonly UniformGrid Grid = new(gridSize,gridSize);
+    public readonly UniformGrid Grid = new(cellSize);
     public readonly List<int> CumulativeDoubleAreas = [];
 
     public List<Vector2Fraction> Navigate(Vector2 source, Vector2 destination)

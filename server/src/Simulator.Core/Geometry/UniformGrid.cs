@@ -1,27 +1,24 @@
 namespace Simulator.Core.Geometry;
 
-public class UniformGrid(int cellHeight, int cellWidth)
+public class UniformGrid(int cellSize)
 {
-    private readonly double _reciprocalCellHeight = 1.0 / cellHeight;
-    private readonly double _reciprocalCellWidth = 1.0 / cellWidth;
+    public readonly int CellSize = cellSize;
+    private readonly double _reciprocalCellSize = 1.0f / cellSize;
     
     private readonly Dictionary<(int cellX, int cellY), List<int>> _grid = new();
 
-    public void Add(double x, double y, int value)
+    public void Add(int cellX, int cellY, int value)
     {
-        var cellX = (int)Math.Floor(x * _reciprocalCellWidth);
-        var cellY = (int)Math.Floor(y * _reciprocalCellHeight);
-
-        if (_grid.TryGetValue((cellX, cellY), out var cellValue))
-            cellValue.Add(value);
+        if (_grid.TryGetValue((cellX, cellY), out var list))
+            list.Add(value);
         else
-            _grid.Add((cellX, cellY), [value]);
+            _grid[(cellX, cellY)] = [value];
     }
 
     public List<int> Get(double x, double y)
     {
-        var cellX = (int)Math.Floor(x * _reciprocalCellWidth);
-        var cellY = (int)Math.Floor(y * _reciprocalCellHeight);
+        var cellX = (int)Math.Floor(x * _reciprocalCellSize);
+        var cellY = (int)Math.Floor(y * _reciprocalCellSize);
 
         if (_grid.TryGetValue((cellX, cellY), out var cellValue))
             return cellValue;

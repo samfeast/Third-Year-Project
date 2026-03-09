@@ -25,7 +25,7 @@ public static class NavMeshGenerator
             var node = new NavMesh.Node(triangle);
             navMesh.Nodes.Add(node);
             navMesh.CumulativeDoubleAreas.Add(node.DoubleArea + navMesh.CumulativeDoubleAreas.LastOrDefault());
-            AddToGrid(navMesh, triangle, i, gridResolution);
+            AddToGrid(navMesh, triangle, i);
         }
         
         Dictionary<EdgeKey, SharedEdge> edgeMap = BuildEdgeMap(triangles);
@@ -44,21 +44,24 @@ public static class NavMeshGenerator
 
     // Naive grid representation -> assign triangles to cells using their bounding box
     // Could be optimised further if grid lookups become a bottleneck
-    private static void AddToGrid(NavMesh navMesh, Triangle triangle, int triangleIndex, int gridResolution)
+    private static void AddToGrid(NavMesh navMesh, Triangle triangle, int triangleIndex)
     {
-        var boundingBox = triangle.GetBoundingBox();
-        var x = boundingBox.MinX;
-        while (x <= boundingBox.MaxX)
+        var gridResolution = navMesh.Grid.CellSize;
+        
+        var bbox = triangle.GetBoundingBox();
+        
+        var minCellX = bbox.MinX / gridResolution;
+        var maxCellX = bbox.MaxX / gridResolution;
+        var minCellY = bbox.MinY / gridResolution;
+        var maxCellY = bbox.MaxY / gridResolution;
+
+        for (int x = minCellX; x <= maxCellX; x++)
         {
-            var y = boundingBox.MinY;
-            while (y <= boundingBox.MaxY)
+            for (int y = minCellY; y <= maxCellY; y++)
             {
                 navMesh.Grid.Add(x, y, triangleIndex);
-                y += Math.Min(gridResolution, boundingBox.MaxY - boundingBox.MinY);
             }
-            x += Math.Min(gridResolution, boundingBox.MaxX - boundingBox.MinX);
         }
-
     }
 
     private static Dictionary<EdgeKey, SharedEdge> BuildEdgeMap(List<Triangle> triangles)
