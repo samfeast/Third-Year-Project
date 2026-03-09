@@ -40,8 +40,13 @@ public class SimulationManager
         if (simulator.Status != SimulationStatus.Running) return;
                 
         var snapshot = engine.StepSimulation();
+        
+        if (snapshot.Step % 100 == 0)
+            Console.WriteLine($"Simulation {id} on step {snapshot.Step}");
+        
         if (snapshot.AllComplete)
         {
+            Console.WriteLine($"Simulation {id} finished on step {snapshot.Step}");
             simulator.Status = SimulationStatus.Finished;
         }
                 

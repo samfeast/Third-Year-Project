@@ -1,23 +1,49 @@
 import SimulationCanvas from "../components/SimulationCanvas";
+import { startPlaybackLoop } from "../playbackLoop";
+import { snapshotStore } from "../store/snapshotStore";
 import { useStore } from "../store/StoreProvider";
-import { useSnapshot } from "../store/useSnapshot";
-import { create } from "../websocket/simulationCommands";
+import { create, getSnapshots } from "../websocket/simulationCommands";
 import "./styles/SimulatePage.css";
 
 export default function SimulatePage() {
   const { state } = useStore();
-  const latestSnapshot = useSnapshot();
 
   return (
     <div>
-      <button className="button" onClick={() => create(state.config)}>
+      <button
+        className="button"
+        onClick={() => {
+          create(state.clientId, state.config);
+          startPlaybackLoop();
+        }}
+      >
         Start Simulation
       </button>
-      <p>Last Snapshot: Step {latestSnapshot?.step}</p>
-      <SimulationCanvas
-        layout={state.config.layout}
-        snapshot={latestSnapshot ? latestSnapshot : undefined}
-      />
+      <button
+        className="button"
+        onClick={() =>
+          getSnapshots(state.clientId, {
+            lastDisplayedStep: snapshotStore.getCurrentStep(),
+            lastBufferedStep: snapshotStore.getLastBufferedStep(),
+            playbackSpeed: 1.0,
+          })
+        }
+      >
+        Get snapshots
+      </button>
+      <button
+        className="button"
+        onClick={() => snapshotStore.setPlaybackStatus("playing")}
+      >
+        Play
+      </button>
+      <button
+        className="button"
+        onClick={() => snapshotStore.setPlaybackStatus("paused")}
+      >
+        Pause
+      </button>
+      <SimulationCanvas />
     </div>
   );
 }

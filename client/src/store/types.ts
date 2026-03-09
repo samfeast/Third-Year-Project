@@ -1,8 +1,8 @@
 // Data store
 export type AppState = {
   connectionStatus: "disconnected" | "connecting" | "connected";
+  clientId: string;
   config: Config;
-  snapshots: Snapshot[];
 };
 
 export type Config = {
@@ -24,6 +24,12 @@ export type Snapshot = {
   final: boolean;
   positions: Point[];
   speeds: number[];
+};
+
+export type PlaybackStatus = {
+  lastDisplayedStep: number;
+  lastBufferedStep: number;
+  playbackSpeed: number;
 };
 
 export const emptyLayout: Layout = {

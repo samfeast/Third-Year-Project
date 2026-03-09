@@ -19,7 +19,9 @@ export default function TestPage() {
     <div>
       <h1>Test</h1>
 
-      <button onClick={() => create(state.config)}>Send layout over WS</button>
+      <button onClick={() => create(state.clientId, state.config)}>
+        Send layout over WS
+      </button>
       <button onClick={() => handleStateUpdate(0.1)}>
         Set agent density 0.1
       </button>

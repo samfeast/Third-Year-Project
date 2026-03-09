@@ -1,21 +1,50 @@
 import { Application, extend } from "@pixi/react";
-import type { Layout, Point, Snapshot } from "../store/types";
+import type { Layout, Point } from "../store/types";
 import DrawSnapshot from "./DrawSnapshot";
 import DrawLayout from "./DrawLayout";
 import { Container, Graphics } from "pixi.js";
+import { useStore } from "../store/StoreProvider";
+import { useSnapshot } from "../store/useSnapshot";
 
 extend({ Graphics, Container });
 
-export default function SimulationCanvas({
-  layout,
-  snapshot,
-}: {
-  layout: Layout;
-  snapshot?: Snapshot;
-}) {
+export default function SimulationCanvas() {
+  const { state } = useStore();
+  const snapshot = useSnapshot();
+
+  const layout = state.config.layout;
+
   const canvasWidth = 1200;
   const canvasHeight = 600;
 
+  const { scale, offsetX, offsetY } = GetScaleAndOffset(
+    layout,
+    canvasWidth,
+    canvasHeight,
+  );
+
+  return (
+    <Application
+      width={canvasWidth}
+      height={canvasHeight}
+      background={0xaaaaaa}
+    >
+      <container scale={scale} x={offsetX} y={offsetY}>
+        <DrawLayout layout={layout} />
+
+        {snapshot && !snapshot.final && (
+          <DrawSnapshot snapshot={snapshot} agentRadius={22.5} />
+        )}
+      </container>
+    </Application>
+  );
+}
+
+function GetScaleAndOffset(
+  layout: Layout,
+  canvasWidth: number,
+  canvasHeight: number,
+) {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -40,19 +69,9 @@ export default function SimulationCanvas({
   const offsetX = -minX * scale + (canvasWidth - scale * worldWidth) / 2;
   const offsetY = -minY * scale + (canvasHeight - scale * worldHeight) / 2;
 
-  return (
-    <Application
-      width={canvasWidth}
-      height={canvasHeight}
-      background={0xaaaaaa}
-    >
-      <container scale={scale} x={offsetX} y={offsetY}>
-        <DrawLayout layout={layout} />
-
-        {snapshot && !snapshot.final && (
-          <DrawSnapshot snapshot={snapshot} agentRadius={22.5} />
-        )}
-      </container>
-    </Application>
-  );
+  return {
+    scale: scale,
+    offsetX: offsetX,
+    offsetY: offsetY,
+  };
 }

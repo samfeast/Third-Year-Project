@@ -1,6 +1,6 @@
 import { type Action } from "../store/reducer";
 import { snapshotStore } from "../store/snapshotStore";
-import { convertSnapshot } from "../utils/ServerSnapshotConverter";
+import { convertSnapshots } from "../utils/ServerSnapshotConverter";
 
 class WebSocketClient {
   private socket?: WebSocket;
@@ -32,9 +32,12 @@ class WebSocketClient {
     // Assume all incoming messages are snapshots for now
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
+
       console.log(msg);
-      //const snapshot = convertSnapshot(msg);
-      //snapshotStore.setSnapshot(snapshot);
+      if (msg.type === "snapshots") {
+        const snapshots = convertSnapshots(msg);
+        snapshotStore.addSnapshots(snapshots);
+      }
     };
   }
 

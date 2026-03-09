@@ -9,6 +9,18 @@ export default function AppLayout() {
   const { dispatch } = useStore();
 
   useEffect(() => {
+    let clientId = localStorage.getItem("clientId");
+
+    if (!clientId) {
+      clientId = crypto.randomUUID();
+      localStorage.setItem("clientId", clientId);
+    }
+
+    dispatch({
+      type: "SET_CLIENT_ID",
+      payload: clientId,
+    });
+
     websocketClient.connect(dispatch);
   }, []);
 
