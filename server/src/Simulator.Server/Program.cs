@@ -142,6 +142,9 @@ public class Program
 
         var simulator = manager.GetSimulator(clientId);
         var snapshots = simulator.GetSnapshots(Math.Max(data.lastBufferedStep, 0), numSteps);
+
+        if (snapshots.Count == 0)
+            return [];
         
         return snapshots.Serialise(DataFormat.JSON, 2);
     }

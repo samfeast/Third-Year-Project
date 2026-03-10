@@ -8,7 +8,13 @@ export function startPlaybackLoop() {
   if (intervalId !== null) return;
 
   intervalId = window.setInterval(() => {
+    if (snapshotStore.isPlaybackFinished()) {
+      stopPlaybackLoop();
+      return;
+    }
+
     if (snapshotStore.isPaused()) return;
+
     snapshotStore.advanceStep();
   }, FRAME_INTERVAL);
 }

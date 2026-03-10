@@ -7,6 +7,7 @@ class SnapshotStore {
   private snapshots: Snapshot[] = [];
 
   private playbackState: PlaybackState = "paused";
+  private receivedFinalStep: boolean = false;
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -27,6 +28,14 @@ class SnapshotStore {
 
   isPaused() {
     return this.playbackState === "paused";
+  }
+
+  hasReceivedFinalStep() {
+    return this.receivedFinalStep;
+  }
+
+  isPlaybackFinished() {
+    return this.receivedFinalStep && this.snapshots.length <= 1;
   }
 
   getLatestSnapshot(): Snapshot | null {
@@ -51,6 +60,9 @@ class SnapshotStore {
     for (const snapshot of newSnapshots) {
       if (last === -1 || snapshot.step > last) {
         this.snapshots.push(snapshot);
+        if (snapshot.final) {
+          this.receivedFinalStep = true;
+        }
       }
     }
   }
