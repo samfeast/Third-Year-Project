@@ -1,4 +1,5 @@
-import type { Point, Snapshot } from "../store/types";
+import type { Point } from "../types/types";
+import type { Snapshot } from "../features/simulation/types";
 
 type ServerAgent = {
   id: number;

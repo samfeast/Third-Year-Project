@@ -1,6 +1,7 @@
 import { Graphics } from "pixi.js";
-import type { Layout } from "../store/types";
 import { extend } from "@pixi/react";
+
+import type { Layout } from "../../features/layout/types";
 
 extend({ Graphics });
 

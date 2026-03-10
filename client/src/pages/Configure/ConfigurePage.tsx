@@ -1,5 +1,6 @@
-import { useStore } from "../store/StoreProvider";
-import "./styles/ConfigurePage.css";
+import { useStore } from "../../store/StoreProvider";
+
+import "./ConfigurePage.css";
 
 export default function ConfigurePage() {
   const { state, dispatch } = useStore();

@@ -1,4 +1,4 @@
-import "./styles/ToggleSwitch.css";
+import "./ToggleSwitch.css";
 
 type ToggleSwitchProps = {
   leftLabel?: string;

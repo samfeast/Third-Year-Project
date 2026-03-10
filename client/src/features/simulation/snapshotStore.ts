@@ -1,12 +1,12 @@
-import { type Snapshot } from "./types";
+import type { Snapshot } from "./types";
 
-type PlaybackStatus = "playing" | "paused";
+type PlaybackState = "playing" | "paused";
 
 class SnapshotStore {
   private listeners = new Set<() => void>();
   private snapshots: Snapshot[] = [];
 
-  private playbackStatus: PlaybackStatus = "paused";
+  private playbackState: PlaybackState = "paused";
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -17,17 +17,16 @@ class SnapshotStore {
     this.listeners.forEach((l) => l());
   }
 
-  setPlaybackStatus(playbackStatus: PlaybackStatus) {
-    this.playbackStatus = playbackStatus;
-    this.emit();
+  setPlaybackState(playbackState: PlaybackState) {
+    this.playbackState = playbackState;
   }
 
   getPlaybackStatus() {
-    return this.playbackStatus;
+    return this.playbackState;
   }
 
   isPaused() {
-    return this.playbackStatus === "paused";
+    return this.playbackState === "paused";
   }
 
   getLatestSnapshot(): Snapshot | null {

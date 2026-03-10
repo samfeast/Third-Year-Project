@@ -1,6 +1,7 @@
 import { extend } from "@pixi/react";
 import { Graphics } from "pixi.js";
-import type { Snapshot } from "../store/types";
+
+import type { Snapshot } from "../../features/simulation/types";
 
 extend({ Graphics });
 

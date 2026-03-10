@@ -1,4 +1,4 @@
-import { snapshotStore } from "./store/snapshotStore";
+import { snapshotStore } from "./snapshotStore";
 
 const FRAME_INTERVAL = 100; // 10 FPS by default
 

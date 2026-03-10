@@ -1,9 +1,11 @@
-import SimulationCanvas from "../components/SimulationCanvas";
-import { startPlaybackLoop } from "../playbackLoop";
-import { snapshotStore } from "../store/snapshotStore";
-import { useStore } from "../store/StoreProvider";
-import { create, getSnapshots } from "../websocket/simulationCommands";
-import "./styles/SimulatePage.css";
+import { useStore } from "../../store/StoreProvider";
+import { create, getSnapshots } from "../../websocket/simulationCommands";
+
+import { startPlaybackLoop } from "../../features/simulation/playbackLoop";
+import { snapshotStore } from "../../features/simulation/snapshotStore";
+import SimulationCanvas from "./SimulationCanvas";
+
+import "./SimulatePage.css";
 
 export default function SimulatePage() {
   const { state } = useStore();
@@ -33,13 +35,13 @@ export default function SimulatePage() {
       </button>
       <button
         className="button"
-        onClick={() => snapshotStore.setPlaybackStatus("playing")}
+        onClick={() => snapshotStore.setPlaybackState("playing")}
       >
         Play
       </button>
       <button
         className="button"
-        onClick={() => snapshotStore.setPlaybackStatus("paused")}
+        onClick={() => snapshotStore.setPlaybackState("paused")}
       >
         Pause
       </button>

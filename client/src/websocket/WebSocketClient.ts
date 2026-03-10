@@ -1,5 +1,6 @@
 import { type Action } from "../store/reducer";
-import { snapshotStore } from "../store/snapshotStore";
+import { snapshotStore } from "../features/simulation/snapshotStore";
+
 import { convertSnapshots } from "../utils/ServerSnapshotConverter";
 
 class WebSocketClient {

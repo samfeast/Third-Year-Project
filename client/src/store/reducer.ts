@@ -1,4 +1,5 @@
-import { defaultConfig, type AppState } from "./types";
+import type { AppState } from "./types";
+import { defaultConfig } from "../types/types";
 
 // Update this and reducer() when adding new actions
 export type Action =

@@ -1,4 +1,5 @@
-import type { Layout, Point } from "../store/types";
+import type { Point } from "../../../types/types";
+import type { Layout } from "../types";
 
 const positive: Point[] = [
   [0, 0],

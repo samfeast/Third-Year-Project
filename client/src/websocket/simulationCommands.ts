@@ -1,5 +1,7 @@
 // Commands to be sent over the web socket
-import type { Config, PlaybackStatus } from "../store/types";
+import type { PlaybackInfo } from "../features/simulation/types";
+import type { Config } from "../types/types";
+
 import { websocketClient } from "./WebSocketClient";
 
 export function create(clientId: string, config: Config) {
@@ -10,10 +12,10 @@ export function create(clientId: string, config: Config) {
   });
 }
 
-export function getSnapshots(clientId: string, playbackStatus: PlaybackStatus) {
+export function getSnapshots(clientId: string, playbackInfo: PlaybackInfo) {
   websocketClient.send({
     clientId: clientId,
     command: "get-snapshots",
-    payload: playbackStatus,
+    payload: playbackInfo,
   });
 }

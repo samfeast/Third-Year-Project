@@ -1,10 +1,14 @@
 import { Application, extend } from "@pixi/react";
-import type { Layout, Point } from "../store/types";
+import { Container, Graphics } from "pixi.js";
+
+import { useStore } from "../../store/StoreProvider";
+import { useSnapshot } from "../../features/simulation/useSnapshot";
+
+import type { Point } from "../../types/types";
+import type { Layout } from "../../features/layout/types";
+
 import DrawSnapshot from "./DrawSnapshot";
 import DrawLayout from "./DrawLayout";
-import { Container, Graphics } from "pixi.js";
-import { useStore } from "../store/StoreProvider";
-import { useSnapshot } from "../store/useSnapshot";
 
 extend({ Graphics, Container });
 
@@ -14,8 +18,8 @@ export default function SimulationCanvas() {
 
   const layout = state.config.layout;
 
-  const canvasWidth = 1200;
-  const canvasHeight = 600;
+  const canvasWidth = 1400;
+  const canvasHeight = 700;
 
   const { scale, offsetX, offsetY } = GetScaleAndOffset(
     layout,

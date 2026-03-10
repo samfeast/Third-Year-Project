@@ -1,4 +1,4 @@
-import "./styles/PresetCard.css";
+import "./PresetCard.css";
 
 type PresetCardProps = {
   name: string;

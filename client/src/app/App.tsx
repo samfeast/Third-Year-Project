@@ -1,12 +1,12 @@
+import { StoreProvider } from "../store/StoreProvider";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { StoreProvider } from "./store/StoreProvider";
-import GuidePage from "./pages/GuidePage";
-import TestPage from "./pages/TestPage";
-import CreatePage from "./pages/CreatePage";
-import ConfigurePage from "./pages/ConfigurePage";
-import SimulatePage from "./pages/SimulatePage";
-import AnalysePage from "./pages/AnalysePage";
+
 import AppLayout from "./AppLayout";
+import GuidePage from "../pages/Guide/GuidePage";
+import CreatePage from "../pages/Create/CreatePage";
+import ConfigurePage from "../pages/Configure/ConfigurePage";
+import SimulatePage from "../pages/Simulate/SimulatePage";
+import AnalysePage from "../pages/Analyse/AnalysePage";
 
 function App() {
   return (
@@ -15,7 +15,6 @@ function App() {
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/guide" />} />
           <Route path="guide" element={<GuidePage />} />
-          <Route path="test" element={<TestPage />} />
           <Route path="create" element={<CreatePage />} />
           <Route path="configure" element={<ConfigurePage />} />
           <Route path="simulate" element={<SimulatePage />} />

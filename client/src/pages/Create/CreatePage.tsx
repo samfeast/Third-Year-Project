@@ -1,13 +1,17 @@
 import { useState } from "react";
-import ToggleSwitch from "../components/ToggleSwitch";
-import PresetCard from "../components/PresetCard";
-import "./styles/CreatePage.css";
-import { useStore } from "../store/StoreProvider";
-import { emptyLayout, type Layout } from "../store/types";
-import { preset1 } from "../presets/preset1";
-import { preset2 } from "../presets/preset2";
-import { preset3 } from "../presets/preset3";
-import { preset4 } from "../presets/preset4";
+import { useStore } from "../../store/StoreProvider";
+import type { Layout } from "../../features/layout/types";
+
+import ToggleSwitch from "../../components/ToggleSwitch/ToggleSwitch";
+import PresetCard from "./PresetCard";
+
+import { preset1 } from "../../features/layout/presets/preset1";
+import { preset2 } from "../../features/layout/presets/preset2";
+import { preset3 } from "../../features/layout/presets/preset3";
+import { preset4 } from "../../features/layout/presets/preset4";
+import { emptyLayout } from "../../features/layout/defaults";
+
+import "./CreatePage.css";
 
 export default function CreatePage() {
   const { state, dispatch } = useStore();
