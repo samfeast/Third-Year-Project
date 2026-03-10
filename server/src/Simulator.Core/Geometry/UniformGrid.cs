@@ -17,8 +17,8 @@ public class UniformGrid(int cellSize)
 
     public List<int> Get(double x, double y)
     {
-        var cellX = (int)Math.Floor(x * _reciprocalCellSize);
-        var cellY = (int)Math.Floor(y * _reciprocalCellSize);
+        var cellX = (int)(x * _reciprocalCellSize);
+        var cellY = (int)(y * _reciprocalCellSize);
 
         if (_grid.TryGetValue((cellX, cellY), out var cellValue))
             return cellValue;
