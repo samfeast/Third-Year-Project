@@ -11,9 +11,9 @@ public class SimulationManager
     private readonly Dictionary<Guid, ConcurrentQueue<ISimulationCommand>> _simulationCommandQueues = new();
     private readonly ConcurrentQueue<IManagerCommand> _simulationManagerCommands = new();
     
-    public Simulator GetSimulator(Guid id)
+    public Simulator? TryGetSimulator(Guid id)
     {
-        return _simulators[id];
+        return _simulators.GetValueOrDefault(id);
     }
     
     public async Task RunLoop(CancellationToken token)
@@ -88,8 +88,8 @@ public class SimulationManager
     #region Command callbacks
     internal void CreateSimulationInternal(CreateSimulationCommand command)
     {
-        if (_simulators.ContainsKey(command.Id))
-            throw new InvalidOperationException("Simulation already exists with this GUID");
+        if (_simulators.Remove(command.Id))
+            Console.WriteLine($"Discarded previous simulation with GUID {command.Id}");
 
         var engine = new SimulationEngine(command.Config);
         _simulators[command.Id] = new Simulator(engine, command.Priority);

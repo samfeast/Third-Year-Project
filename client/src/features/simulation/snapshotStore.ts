@@ -30,6 +30,10 @@ class SnapshotStore {
     return this.playbackState === "paused";
   }
 
+  setReceivedFinalStep(state: boolean) {
+    this.receivedFinalStep = state;
+  }
+
   hasReceivedFinalStep() {
     return this.receivedFinalStep;
   }
@@ -52,6 +56,10 @@ class SnapshotStore {
 
   getBufferLength(): number {
     return this.snapshots.length;
+  }
+
+  clearSnapshotBuffer() {
+    this.snapshots = [];
   }
 
   addSnapshots(newSnapshots: Snapshot[]) {

@@ -9,4 +9,6 @@ export function startSimulation(clientId: string, config: Config) {
   startPlaybackLoop();
   startSnapshotPolling(clientId);
   snapshotStore.setPlaybackState("playing");
+  snapshotStore.clearSnapshotBuffer();
+  snapshotStore.setReceivedFinalStep(false);
 }

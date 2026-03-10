@@ -140,7 +140,10 @@ public class Program
         if (numSteps <= 0)
             return [];
 
-        var simulator = manager.GetSimulator(clientId);
+        var simulator = manager.TryGetSimulator(clientId);
+        if (simulator == null)
+            return [];
+        
         var snapshots = simulator.GetSnapshots(Math.Max(data.lastBufferedStep, 0), numSteps);
 
         if (snapshots.Count == 0)
