@@ -19,7 +19,7 @@ public class SimulationEngine
         // Initialise RNG with random seed if one isn't provided
         _rng = config.Seed == null ? new Random() : new Random(config.Seed.Value);
         
-        Mesh = NavMeshGenerator.GenerateNavMesh(config.Geometry, 50);
+        Mesh = NavMeshGenerator.GenerateNavMesh(config.Geometry);
         LiveAgents = new List<Agent>(config.NumAgents);
 
         // Generate random start and end points for all numAgents

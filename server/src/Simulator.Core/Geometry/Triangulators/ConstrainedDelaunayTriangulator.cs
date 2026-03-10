@@ -7,7 +7,7 @@ using Polygon = Simulator.Core.Geometry.Shapes.Polygon;
 namespace Simulator.Core.Geometry.Triangulators;
 
 // Implementation of ITriangulator which uses the Triangle.NET library
-public class ConstrainedDelaunayTriangulator(int exclusionRad) : ITriangulator
+public class ConstrainedDelaunayTriangulator(double exclusionRad) : ITriangulator
 {
     public List<Triangle> Triangulate(InputGeometry inputGeometry)
     {
