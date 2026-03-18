@@ -7,6 +7,7 @@ class SnapshotStore {
   private snapshots: Snapshot[] = [];
 
   private playbackState: PlaybackState = "paused";
+  private playbackSpeed: number = 1;
   private receivedFinalStep: boolean = false;
 
   subscribe = (listener: () => void) => {
@@ -22,12 +23,20 @@ class SnapshotStore {
     this.playbackState = playbackState;
   }
 
-  getPlaybackStatus() {
+  getPlaybackState() {
     return this.playbackState;
   }
 
   isPaused() {
     return this.playbackState === "paused";
+  }
+
+  setPlaybackSpeed(playbackSpeed: number) {
+    this.playbackSpeed = playbackSpeed;
+  }
+
+  getPlaybackSpeed() {
+    return this.playbackSpeed;
   }
 
   setReceivedFinalStep(state: boolean) {

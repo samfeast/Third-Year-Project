@@ -17,7 +17,7 @@ export function startSnapshotPolling(clientId: string) {
     getSnapshots(clientId, {
       lastDisplayedStep: snapshotStore.getCurrentStep(),
       lastBufferedStep: snapshotStore.getLastBufferedStep(),
-      playbackSpeed: 1,
+      playbackSpeed: snapshotStore.getPlaybackSpeed(),
     });
   }, 500);
 }

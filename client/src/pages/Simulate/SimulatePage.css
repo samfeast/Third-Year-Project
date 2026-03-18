@@ -12,3 +12,36 @@
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
+
+.simulation-page {
+  display: flex;
+  flex-direction: column; /* Stack buttons and canvas vertically */
+  height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.button-row {
+  display: flex;
+  gap: 4px; /* Space between buttons */
+  margin-bottom: 16px;
+}
+
+.canvas-area {
+  display: flex;
+  flex: 1;
+  gap: 80px; /* Space between canvas and slider */
+}
+
+canvas {
+  width: 1400px;
+  height: 700px;
+  display: block;
+  background: #aaaaaa;
+}
+
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  height: 700px;
+}

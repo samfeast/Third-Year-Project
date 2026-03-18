@@ -119,8 +119,8 @@ export default function Slider({
     translateY = "50%";
 
     translateX = styles?.invertTooltip
-      ? `calc(-100% - ${width + tooltipOffset}px)`
-      : `${tooltipOffset}px`;
+      ? `calc(-100% - ${tooltipOffset}px)`
+      : `${width + tooltipOffset}px`;
   } else {
     translateX = "-50%";
 
@@ -131,10 +131,10 @@ export default function Slider({
 
   const tooltipStyle: React.CSSProperties = {
     [axisStart]: `${currentPosition * 100}%`,
-    backgroundColor: styles?.tooltipBackgroundColour,
-    color: styles?.tooltipTextColour,
-    borderRadius: styles?.tooltipBorderRadius,
-    fontSize: styles?.tooltipFontSize,
+    backgroundColor: styles?.tooltipBackgroundColour ?? "#000",
+    color: styles?.tooltipTextColour ?? "#fff",
+    borderRadius: styles?.tooltipBorderRadius ?? 0,
+    fontSize: styles?.tooltipFontSize ?? 12,
     transform: `translate(${translateX}, ${translateY})`,
   };
 
