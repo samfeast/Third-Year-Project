@@ -5,7 +5,7 @@ import { useStore } from "../store/StoreProvider";
 import { websocketClient } from "../websocket/WebSocketClient";
 import Navbar from "../components/Navbar/Navbar";
 
-import "../styles/App.css";
+import styles from "../styles/App.module.css";
 
 export default function AppLayout() {
   const { dispatch } = useStore();
@@ -30,7 +30,7 @@ export default function AppLayout() {
     <div>
       <Navbar />
 
-      <main className="main-content">
+      <main className={styles["main-content"]}>
         <Outlet />
       </main>
     </div>

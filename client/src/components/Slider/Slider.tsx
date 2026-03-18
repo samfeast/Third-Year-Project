@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 
-import "./Slider.css";
+import sliderStyles from "./Slider.module.css";
 
 type SliderProps = {
   position: number; // Position in [0,1], intentionally normalised to allow non-linear mappings via formatPosition
@@ -199,9 +199,9 @@ export default function Slider({
   }
 
   return (
-    <div className="container" style={containerStyle}>
+    <div className={sliderStyles["container"]} style={containerStyle}>
       {iconBefore && (
-        <div className="icon" style={iconStyle}>
+        <div className={sliderStyles["icon"]} style={iconStyle}>
           {iconBefore.element}
         </div>
       )}
@@ -210,13 +210,13 @@ export default function Slider({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="track"
+        className={sliderStyles["track"]}
         style={trackStyle}
       >
-        <div className="fill" style={fillStyle} />
-        <div className="handle" style={handleStyle} />
+        <div className={sliderStyles["fill"]} style={fillStyle} />
+        <div className={sliderStyles["handle"]} style={handleStyle} />
         {dragging && (
-          <div className="tooltip" style={tooltipStyle}>
+          <div className={sliderStyles["tooltip"]} style={tooltipStyle}>
             {formatPosition
               ? formatPosition(currentPosition)
               : currentPosition.toString()}
@@ -224,7 +224,7 @@ export default function Slider({
         )}
       </div>
       {iconAfter && (
-        <div className="icon" style={iconStyle}>
+        <div className={sliderStyles["icon"]} style={iconStyle}>
           {iconAfter.element}
         </div>
       )}

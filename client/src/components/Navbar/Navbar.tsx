@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 
-import "./Navbar.css";
+import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   return (
-    <nav className="navbar">
+    <nav className={styles["navbar"]}>
       <Link to="/guide">Guide</Link>
       <Link to="/create">Create</Link>
       <Link to="/configure">Configure</Link>

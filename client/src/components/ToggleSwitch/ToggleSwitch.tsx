@@ -1,4 +1,4 @@
-import "./ToggleSwitch.css";
+import styles from "./ToggleSwitch.module.css";
 
 type ToggleSwitchProps = {
   leftLabel?: string;
@@ -14,17 +14,19 @@ export default function ToggleSwitch({
   onChange,
 }: ToggleSwitchProps) {
   return (
-    <div className="toggle-wrapper">
-      {leftLabel && <span className="toggle-label">{leftLabel}</span>}
-      <label className="switch">
+    <div className={styles["toggle-wrapper"]}>
+      {leftLabel && <span className={styles["toggle-label"]}>{leftLabel}</span>}
+      <label className={styles["switch"]}>
         <input
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
         />
-        <span className="slider round"></span>
+        <span className={`${styles.slider} ${styles.round}`}></span>
       </label>
-      {rightLabel && <span className="toggle-label">{rightLabel}</span>}
+      {rightLabel && (
+        <span className={styles["toggle-label"]}>{rightLabel}</span>
+      )}
     </div>
   );
 }

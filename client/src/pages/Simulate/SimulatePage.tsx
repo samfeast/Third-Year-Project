@@ -8,7 +8,7 @@ import SimulationCanvas from "./SimulationCanvas";
 import Slider from "../../components/Slider/Slider";
 import PlaybackSpeedIcon from "../../components/PlaybackSpeedIcon/PlaybackSpeedIcon";
 
-import "./SimulatePage.css";
+import styles from "./SimulatePage.module.css";
 
 export default function SimulatePage() {
   const { state } = useStore();
@@ -34,22 +34,22 @@ export default function SimulatePage() {
   }
 
   return (
-    <div className="simulation-page">
-      <div className="button-row">
+    <div className={styles["simulation-page"]}>
+      <div className={styles["button-row"]}>
         <button
-          className="button"
+          className={styles["button"]}
           onClick={() => startSimulation(state.clientId, state.config)}
         >
           Start Simulation
         </button>
         <button
-          className="button"
+          className={styles["button"]}
           onClick={() => snapshotStore.setPlaybackState("playing")}
         >
           Play
         </button>
         <button
-          className="button"
+          className={styles["button"]}
           onClick={() => snapshotStore.setPlaybackState("paused")}
         >
           Pause
@@ -57,9 +57,9 @@ export default function SimulatePage() {
       </div>
 
       {/* Canvas + slider */}
-      <div className="canvas-area">
+      <div className={styles["canvas-area"]}>
         <SimulationCanvas />
-        <div className="slider-wrapper">
+        <div className={styles["slider-wrapper"]}>
           <Slider
             position={playbackSpeedPosition}
             width={24}

@@ -11,7 +11,7 @@ import { preset3 } from "../../features/layout/presets/preset3";
 import { preset4 } from "../../features/layout/presets/preset4";
 import { emptyLayout } from "../../features/layout/defaults";
 
-import "./CreatePage.css";
+import styles from "./CreatePage.module.css";
 
 export default function CreatePage() {
   const { state, dispatch } = useStore();
@@ -69,7 +69,7 @@ export default function CreatePage() {
       />
 
       {showPresets ? (
-        <div className="preset-grid">
+        <div className={styles["preset-grid"]}>
           {presets.map((preset) => (
             <PresetCard
               key={preset.name}
