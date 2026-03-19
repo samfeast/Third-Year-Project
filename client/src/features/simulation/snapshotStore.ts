@@ -9,6 +9,7 @@ class SnapshotStore {
   private playbackState: PlaybackState = "paused";
   private playbackSpeed: number = 1;
   private receivedFinalStep: boolean = false;
+  private maxStepIndexDisplayed: number = 0;
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -71,6 +72,10 @@ class SnapshotStore {
     this.snapshots = [];
   }
 
+  getMaxStepIndexDisplayed(): number {
+    return this.maxStepIndexDisplayed;
+  }
+
   addSnapshots(newSnapshots: Snapshot[]) {
     const last = this.getLastBufferedStep();
 
@@ -82,10 +87,15 @@ class SnapshotStore {
         }
       }
     }
+    this.emit();
   }
 
   advanceStep() {
     if (this.snapshots.length > 1) {
+      const next = this.snapshots[1];
+      if (next.step > this.maxStepIndexDisplayed) {
+        this.maxStepIndexDisplayed = next.step;
+      }
       this.snapshots.shift();
       this.emit();
     }

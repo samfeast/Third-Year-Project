@@ -29,8 +29,8 @@
 
 .canvas-area {
   display: flex;
-  flex: 1;
   gap: 80px; /* Space between canvas and slider */
+  padding-bottom: 20px;
 }
 
 canvas {

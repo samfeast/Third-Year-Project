@@ -9,6 +9,7 @@ import Slider from "../../components/Slider/Slider";
 import PlaybackSpeedIcon from "../../components/PlaybackSpeedIcon/PlaybackSpeedIcon";
 
 import styles from "./SimulatePage.module.css";
+import TimelineScrubber from "./TimelineScrubber";
 
 export default function SimulatePage() {
   const { state } = useStore();
@@ -89,6 +90,7 @@ export default function SimulatePage() {
           />
         </div>
       </div>
+      <TimelineScrubber />
     </div>
   );
 }

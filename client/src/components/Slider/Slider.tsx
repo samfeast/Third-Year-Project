@@ -8,6 +8,7 @@ type SliderProps = {
   length: number; // Pixel length of track (end to end)
   orientation: "vertical" | "horizontal";
   disabled?: boolean;
+  onDragStart?: () => void;
   onChangeCommitted?: (position: number) => void;
   formatPosition?: (position: number) => string; // Function to convert position in range [0,1] to display value
   styles?: SliderStyles;
@@ -41,6 +42,7 @@ export default function Slider({
   length,
   orientation,
   disabled,
+  onDragStart,
   onChangeCommitted,
   formatPosition,
   styles,
@@ -176,6 +178,7 @@ export default function Slider({
 
     e.currentTarget.setPointerCapture(e.pointerId);
     setDragging(true);
+    onDragStart?.();
 
     const p = getPositionFromPointer(e);
     setDragPosition(p);
