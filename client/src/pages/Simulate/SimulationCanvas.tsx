@@ -33,7 +33,7 @@ export default function SimulationCanvas() {
       height={canvasHeight}
       background={0xaaaaaa}
     >
-      <container scale={scale} x={offsetX} y={offsetY}>
+      <container scale={{ x: scale, y: -scale }} x={offsetX} y={offsetY}>
         <DrawLayout layout={layout} />
 
         {snapshot && !snapshot.final && (
@@ -71,7 +71,7 @@ function GetScaleAndOffset(
   const scale = Math.min(scaleX, scaleY);
 
   const offsetX = -minX * scale + (canvasWidth - scale * worldWidth) / 2;
-  const offsetY = -minY * scale + (canvasHeight - scale * worldHeight) / 2;
+  const offsetY = maxY * scale + (canvasHeight - scale * worldHeight) / 2;
 
   return {
     scale: scale,

@@ -7,7 +7,7 @@ declare module "react" {
         draw?: (g: Graphics) => void;
       };
       container: {
-        scale?: number;
+        scale?: number | { x: number; y: number };
         x?: number;
         y?: number;
         children?: React.ReactNode;
