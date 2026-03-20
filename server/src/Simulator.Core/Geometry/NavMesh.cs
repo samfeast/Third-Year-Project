@@ -20,7 +20,7 @@ public class NavMesh(int cellSize)
         public readonly Vector2Fraction Left = left;
         public readonly Vector2Fraction Right = right;
     }
-    
+
     public readonly List<Node> Nodes = [];
     public readonly UniformGrid Grid = new(cellSize);
     public readonly List<int> CumulativeDoubleAreas = [];
@@ -32,11 +32,11 @@ public class NavMesh(int cellSize)
         var endNode = GetCurrentNode(destination.X, destination.Y)[0];
 
         var channel = GetChannel(startNode, endNode);
-        
+
         var portals = GetPortals(channel);
-        
+
         portals.Add(new Portal(destination.ToVector2Fraction(), destination.ToVector2Fraction()));
-        
+
         var path = Funnel(source.ToVector2Fraction(), destination.ToVector2Fraction(), portals);
 
         return path;
@@ -52,7 +52,10 @@ public class NavMesh(int cellSize)
             if (Nodes[i].Triangle.ContainsPoint(new Vector2(x, y)))
                 rtn.Add(i);
         }
+
         Debug.Assert(rtn.Count > 0, $"Failed to find node: {x} {y}");
+        if (rtn.Count > 1)
+            Console.WriteLine($"WARNING: Position inside {rtn.Count} nodes");
         return rtn;
     }
 
@@ -91,7 +94,7 @@ public class NavMesh(int cellSize)
             {
                 if (neighbour == -1 || visited[neighbour])
                     continue;
-                
+
                 double alt = dist[current] + GetCentroidDistance(current, neighbour);
 
                 if (alt < dist[neighbour])
@@ -102,7 +105,7 @@ public class NavMesh(int cellSize)
                 }
             }
         }
-        
+
         var path = new List<int>();
 
         // Case where no path exists
@@ -148,101 +151,92 @@ public class NavMesh(int cellSize)
 
     private List<Vector2Fraction> Funnel(Vector2Fraction source, Vector2Fraction destination, List<Portal> portals)
     {
-        var result = new List<Vector2Fraction> { source };
+        List<Vector2Fraction> path = [source];
+        // Wrap portal sequence with degenerate portals at each end for source and destination
+        var allPortals = new List<Portal>(portals.Count + 2) { new(source, source) };
+        allPortals.AddRange(portals);
+        allPortals.Add(new Portal(destination, destination));
 
-        var index = 0;
-        var apex = source;
-        while (index != -1)
-        {
-            (apex, index) = GetNextFixedPoint(apex, portals, index);
-            result.Add(apex);
-            if (index == portals.Count - 1)
-            {
-                result.Add(destination);
-                break;
-            }
-        }
-        
-        return result;
-    }
+        // Current funnel state
+        var portalApex = source;
+        var portalLeft = source;
+        var portalRight = source;
 
-    private static (Vector2Fraction, int) GetNextFixedPoint(Vector2Fraction apex, List<Portal> portals, int portalIndex)
-    {
-        var leftIndex = portalIndex;
-        var rightIndex = portalIndex;
-        
-        var left = portals[leftIndex].Left;
-        var right = portals[rightIndex].Right;
-        
-        for (int i = portalIndex; i < portals.Count - 1; i++)
+        // Track which portal index each boundary vertex came from
+        var leftIndex = 0;
+        var rightIndex = 0;
+
+        for (int i = 1; i < allPortals.Count; i++)
         {
-            // If left and right have converged to the same vertex then it must be the destination, so exit.
-            if (left == right)
+            int apexIndex;
+
+            var newLeft = allPortals[i].Left;
+            var newRight = allPortals[i].Right;
+
+            // Right boundary
+            if (Sign(portalApex, portalRight, newRight) >= LongFraction.Zero)
             {
-                return (left, -1);
-            }
-            
-            var candidateLeft = portals[i+1].Left;
-            var candidateRight = portals[i+1].Right;
-            
-            // If candidateLeft is outside the funnel on the left side, don't update the left edge (it would widen the full)
-            if (Sign(apex, left, candidateLeft) <= LongFraction.Zero)
-            {
-                // If candidateLeft is inside the funnel, update the left edge (to shrink the funnel)
-                if (Sign(apex, right, candidateLeft) >= LongFraction.Zero)
+                if (portalApex == portalRight ||
+                    Sign(portalApex, portalLeft, newRight) < LongFraction.Zero)
                 {
-                    leftIndex++;
-                    left = candidateLeft;
+                    portalRight = newRight;
+                    rightIndex = i;
                 }
-                // If candidateLeft crosses the right edge, return the current right edge (it's a fixed point)
                 else
                 {
-                    return (right, GetNextFunnelIndex(portals, right, rightIndex, false)+1);
+                    // newRight has crossed the left boundary entirely so left becomes a fixed point
+                    path.Add(portalLeft);
+                    portalApex = portalLeft;
+                    apexIndex = leftIndex;
+
+                    // Reset the funnel
+                    portalLeft = portalApex;
+                    portalRight = portalApex;
+                    leftIndex = apexIndex;
+                    rightIndex = apexIndex;
+                    i = apexIndex;
+                    continue;
                 }
             }
 
-            // If candidateRight is outside the funnel on the right side, don't update the right edge (it would widen the full)
-            if (Sign(apex, right, candidateRight) >= LongFraction.Zero)
+            // Left boundary
+            if (Sign(portalApex, portalLeft, newLeft) <= LongFraction.Zero)
             {
-                // If candidateRight is inside the funnel, update the right edge (to shrink the funnel)
-                if (Sign(apex, left, candidateRight) <= LongFraction.Zero)
+                if (portalApex == portalLeft ||
+                    Sign(portalApex, portalRight, newLeft) > LongFraction.Zero)
                 {
-                    rightIndex++;
-                    right = candidateRight;
+                    portalLeft = newLeft;
+                    leftIndex = i;
                 }
-                // If candidateRight crosses the left edge, return the current left edge (it's a fixed point)
                 else
                 {
-                    return (left, GetNextFunnelIndex(portals, left, leftIndex, true)+1);
+                    // newLeft has crossed the right boundary entirely so right becomes a fixed point
+                    path.Add(portalRight);
+                    portalApex = portalRight;
+                    apexIndex = rightIndex;
+
+                    portalLeft = portalApex;
+                    portalRight = portalApex;
+                    leftIndex = apexIndex;
+                    rightIndex = apexIndex;
+                    i = apexIndex;
                 }
             }
         }
-        
-        // Only reached if destination is directly visible from start point
-        return (portals.Last().Left, -1);
+
+        // Ensure the destination is included if it hasn't been already
+        if (!(path[path.Count - 1] == destination))
+            path.Add(destination);
+
+        return path;
     }
 
-    private static int GetNextFunnelIndex(List<Portal> portals, Vector2Fraction point, int startIndex, bool isLeft)
-    {
-        for (int i = startIndex; i < portals.Count - 1; i++)
-        {
-            var nextPortal = portals[i + 1];
-            if (isLeft && !nextPortal.Left.Equals(point))
-                return i;
-            if (!isLeft && !nextPortal.Right.Equals(point))
-                return i;
-        }
-
-        // Unreachable
-        return -1;
-    }
-    
     private static LongFraction Sign(Vector2Fraction a, Vector2Fraction b, Vector2Fraction c)
     {
         return (b.X - a.X) * (c.Y - a.Y)
                - (b.Y - a.Y) * (c.X - a.X);
     }
-    
+
 
     private double GetCentroidDistance(int firstIndex, int secondIndex)
     {
@@ -251,9 +245,9 @@ public class NavMesh(int cellSize)
 
         var firstNodeCentroid = Nodes[firstIndex].Centroid;
         var secondNodeCentroid = Nodes[secondIndex].Centroid;
-        
+
         var dx = firstNodeCentroid.X - secondNodeCentroid.X;
-        var dy =  firstNodeCentroid.Y - secondNodeCentroid.Y;
+        var dy = firstNodeCentroid.Y - secondNodeCentroid.Y;
 
         return Math.Sqrt((dx * dx + dy * dy).Evaluate());
     }
@@ -268,15 +262,15 @@ public class NavMesh(int cellSize)
 
         for (int i = 0; i < 3; i++)
         {
-            if (firstNodeNeighbours[i] == secondIndex) 
+            if (firstNodeNeighbours[i] == secondIndex)
                 firstHasSecond = true;
-            if (secondNodeNeighbours[i] == firstIndex) 
+            if (secondNodeNeighbours[i] == firstIndex)
                 secondHasFirst = true;
         }
 
         return firstHasSecond && secondHasFirst;
     }
-    
+
     public override string ToString()
     {
         var s = $"NavMesh: {Nodes.Count} nodes";
@@ -288,7 +282,7 @@ public class NavMesh(int cellSize)
             string neighbours = string.Join(", ", node.Neighbours);
             s += $"Neighbours: [{neighbours}]";
         }
-        
+
         s += $"\nGrid: {Grid}";
 
         return s;
