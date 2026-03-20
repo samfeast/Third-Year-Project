@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Simulator.Core;
+﻿using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
 
@@ -9,53 +8,50 @@ public class Program
 {
     static void Main(string[] args)
     {
-        // Expect two arguments: input file path, output file path 
-        string inPath = args[0];
-        string meshOutPath = args[1];
-        string snapshotsOutPath = args[2];
-
-        // Load file into InputGeometry object
-        var inputGeometry = inPath.Deserialise<InputGeometry>();
-        
-        System.Console.WriteLine("Geometry loaded");
-
-        int numAgents = 50;
-        double timeStep = 0.05f;
-
-        var watch = Stopwatch.StartNew();
-        var config = new SimulationConfig(inputGeometry, timeStep, numAgents, 103);
-        var simulator = new SimulationEngine(config);
-        watch.Stop();
-        
-        
-        System.Console.WriteLine($"Geometry divided into {simulator.Mesh.Nodes.Count} triangles in {watch.ElapsedMilliseconds}ms");
-        
-        // Save the navmesh to meshOutPath
-        simulator.Mesh.Save(meshOutPath, 1);
-        
-        watch = Stopwatch.StartNew();
-
-        List<SimulationSnapshot> snapshots = [];        
-
-        while (true)
+        System.Console.WriteLine("Welcome to the evacuation simulator CLI interface! Select an option by typing the desired number.");
+        var complete = false;
+        while (!complete)
         {
-            var snapshot = simulator.StepSimulation();
-            snapshots.Add(snapshot);
+            System.Console.WriteLine("\t1. View and store triangulation");
+            System.Console.WriteLine("\t2. Exit");
+            var option = System.Console.ReadLine();
 
-            if (snapshot.Step % 60 == 0)
+            switch (option)
             {
-                System.Console.WriteLine($"{Math.Round(snapshot.Step * timeStep)}s of simulation time ({snapshot.Step} steps) simulated in {watch.ElapsedMilliseconds}ms with {numAgents} agents");
-                System.Console.WriteLine(snapshot);
-            }
+                case "1":
+                    System.Console.Write("Path to geometry input: ");
+                    var inPath = System.Console.ReadLine();
+                    if (string.IsNullOrEmpty(inPath))
+                    {
+                        System.Console.WriteLine("Must provide a valid input path");
+                        break;
+                    }
 
-            if (snapshot.AllComplete)
-            {
-                System.Console.WriteLine("Simulation finished");
-                System.Console.WriteLine(snapshot);
-                break;
+                    System.Console.Write("Path to triangulation output: ");
+                    var outPath = System.Console.ReadLine();
+                    if (string.IsNullOrEmpty(outPath))
+                    {
+                        System.Console.WriteLine("Must provide a valid output path");
+                        break;
+                    }
+                    
+                    System.Console.Write("Geometry exclusion radius (default 22.5): ");
+                    var exclusionRadStr = System.Console.ReadLine();
+                    double exclusionRad;
+                    if (string.IsNullOrEmpty(exclusionRadStr))
+                        exclusionRad = 22.5;
+                    else
+                        exclusionRad = double.Parse(exclusionRadStr);
+                    
+                    var inputGeometry = inPath.Deserialise<InputGeometry>();
+                    var mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50, exclusionRad);
+                    mesh.Save(outPath, 1);
+                    System.Console.WriteLine("Triangulation saved to disk");
+                    break;
+                case "2":
+                    complete = true;
+                    break;
             }
         }
-
-        snapshots.Save(snapshotsOutPath, 1);
     }
 }
