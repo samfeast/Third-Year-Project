@@ -25,21 +25,102 @@ public class NavMesh(int cellSize)
     public readonly UniformGrid Grid = new(cellSize);
     public readonly List<int> CumulativeDoubleAreas = [];
 
-    public List<Vector2Fraction> Navigate(Vector2 source, Vector2 destination)
+    public List<Portal> GetPortals(Vector2 source, Vector2 destination)
     {
         // Degrades when starting and ending on boundaries
         var startNode = GetCurrentNode(source.X, source.Y)[0];
         var endNode = GetCurrentNode(destination.X, destination.Y)[0];
 
+        // Pathfinding using Dijkstra's
         var channel = GetChannel(startNode, endNode);
-
-        var portals = GetPortals(channel);
-
+        
+        var portals = GetPortalsFromChannel(channel);
+        // Add degenerate portals for destination
         portals.Add(new Portal(destination.ToVector2Fraction(), destination.ToVector2Fraction()));
 
-        var path = Funnel(source.ToVector2Fraction(), destination.ToVector2Fraction(), portals);
+        return portals;
+    }
 
-        return path;
+    public List<Vector2Fraction> GetFullFunnelPath(Vector2Fraction position, List<Portal> portals)
+    {
+        List<Vector2Fraction> path = [position];
+        // Portals should never end up empty, could be while (true) but this acts as a guard
+        while (portals.Count > 0)
+        {
+            // Get the next turning point from the last fixed point currently in the path
+            var nextPoint = GetNextTurningPoint(path[^1], portals);
+            path.Add(nextPoint);
+            
+            // If the next point is equal to the destination return the completed path
+            if (nextPoint == portals[^1].Left)
+                return path;
+            
+            // Remove portals which were crossed to reach the next point
+            var crossedPortals = 0;
+            foreach (var portal in portals)
+            {
+                // Condition met if nextPoint is to the right of the left->right portal vector
+                if (Sign(portal.Left, portal.Right, nextPoint) >= LongFraction.Zero)
+                    crossedPortals++;
+                else
+                    break;
+            }
+
+            // If we would be removing all remaining portals, add the destination and return
+            if (crossedPortals >= portals.Count)
+            {
+                path.Add(portals[^1].Left);
+                return path;
+            }
+            
+            portals.RemoveRange(0, crossedPortals);
+        }
+        
+        throw new UnreachableException();
+    }
+
+    public Vector2Fraction GetNextTurningPoint(Vector2Fraction position, List<Portal> remainingPortals)
+    {
+        // Current funnel state
+        var portalApex = position;
+        var portalLeft = position;
+        var portalRight = position;
+
+        for (int i = 0; i < remainingPortals.Count; i++)
+        {
+            var newLeft = remainingPortals[i].Left;
+            var newRight = remainingPortals[i].Right;
+
+            // Right boundary
+            if (Sign(portalApex, portalRight, newRight) >= LongFraction.Zero)
+            {
+                if (portalApex == portalRight ||
+                    Sign(portalApex, portalLeft, newRight) < LongFraction.Zero)
+                {
+                    portalRight = newRight;
+                }
+                else
+                {
+                    return portalLeft;
+                }
+            }
+
+            // Left boundary
+            if (Sign(portalApex, portalLeft, newLeft) <= LongFraction.Zero)
+            {
+                if (portalApex == portalLeft ||
+                    Sign(portalApex, portalRight, newLeft) > LongFraction.Zero)
+                {
+                    portalLeft = newLeft;
+                }
+                else
+                {
+                    return portalRight;
+                }
+            }
+        }
+        
+        return remainingPortals[^1].Left;
     }
 
     private List<int> GetCurrentNode(double x, double y)
@@ -119,7 +200,7 @@ public class NavMesh(int cellSize)
         return path;
     }
 
-    private List<Portal> GetPortals(List<int> channel)
+    private List<Portal> GetPortalsFromChannel(List<int> channel)
     {
         var portals = new List<Portal>(channel.Count);
 
@@ -147,88 +228,6 @@ public class NavMesh(int cellSize)
         }
 
         return null;
-    }
-
-    private List<Vector2Fraction> Funnel(Vector2Fraction source, Vector2Fraction destination, List<Portal> portals)
-    {
-        List<Vector2Fraction> path = [source];
-        // Wrap portal sequence with degenerate portals at each end for source and destination
-        var allPortals = new List<Portal>(portals.Count + 2) { new(source, source) };
-        allPortals.AddRange(portals);
-        allPortals.Add(new Portal(destination, destination));
-
-        // Current funnel state
-        var portalApex = source;
-        var portalLeft = source;
-        var portalRight = source;
-
-        // Track which portal index each boundary vertex came from
-        var leftIndex = 0;
-        var rightIndex = 0;
-
-        for (int i = 1; i < allPortals.Count; i++)
-        {
-            int apexIndex;
-
-            var newLeft = allPortals[i].Left;
-            var newRight = allPortals[i].Right;
-
-            // Right boundary
-            if (Sign(portalApex, portalRight, newRight) >= LongFraction.Zero)
-            {
-                if (portalApex == portalRight ||
-                    Sign(portalApex, portalLeft, newRight) < LongFraction.Zero)
-                {
-                    portalRight = newRight;
-                    rightIndex = i;
-                }
-                else
-                {
-                    // newRight has crossed the left boundary entirely so left becomes a fixed point
-                    path.Add(portalLeft);
-                    portalApex = portalLeft;
-                    apexIndex = leftIndex;
-
-                    // Reset the funnel
-                    portalLeft = portalApex;
-                    portalRight = portalApex;
-                    leftIndex = apexIndex;
-                    rightIndex = apexIndex;
-                    i = apexIndex;
-                    continue;
-                }
-            }
-
-            // Left boundary
-            if (Sign(portalApex, portalLeft, newLeft) <= LongFraction.Zero)
-            {
-                if (portalApex == portalLeft ||
-                    Sign(portalApex, portalRight, newLeft) > LongFraction.Zero)
-                {
-                    portalLeft = newLeft;
-                    leftIndex = i;
-                }
-                else
-                {
-                    // newLeft has crossed the right boundary entirely so right becomes a fixed point
-                    path.Add(portalRight);
-                    portalApex = portalRight;
-                    apexIndex = rightIndex;
-
-                    portalLeft = portalApex;
-                    portalRight = portalApex;
-                    leftIndex = apexIndex;
-                    rightIndex = apexIndex;
-                    i = apexIndex;
-                }
-            }
-        }
-
-        // Ensure the destination is included if it hasn't been already
-        if (!(path[path.Count - 1] == destination))
-            path.Add(destination);
-
-        return path;
     }
 
     private static LongFraction Sign(Vector2Fraction a, Vector2Fraction b, Vector2Fraction c)

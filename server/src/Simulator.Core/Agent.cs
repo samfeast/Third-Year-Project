@@ -24,7 +24,8 @@ public class Agent(int id, int startStep, double _maxSpeed, Vector2 startPos)
     // Generate waypoints from current position to destination across provided navMesh
     public void ComputePath(NavMesh navMesh, Vector2 destination)
     {
-        _waypoints = navMesh.Navigate(Position, destination);
+        var portals = navMesh.GetPortals(Position, destination);
+        _waypoints = navMesh.GetFullFunnelPath(Position.ToVector2Fraction(), portals);
         _nextWaypointIndex = 0;
     }
 
