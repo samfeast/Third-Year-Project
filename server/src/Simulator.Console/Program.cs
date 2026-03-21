@@ -1,4 +1,5 @@
-﻿using Simulator.Core.Geometry;
+﻿using Simulator.Core;
+using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Utils;
 using Simulator.IO;
 
@@ -12,15 +13,20 @@ public class Program
         var complete = false;
         while (!complete)
         {
-            System.Console.WriteLine("\t1. View and store triangulation");
-            System.Console.WriteLine("\t2. Exit");
+            System.Console.WriteLine("\t1. Write triangulation to disk");
+            System.Console.WriteLine("\t2. Run single agent simulation");
+            System.Console.WriteLine("\t3. Exit");
             var option = System.Console.ReadLine();
-
+            
+            string? inPath;
+            string? outPath;
+            InputGeometry inputGeometry;
+            
             switch (option)
             {
                 case "1":
                     System.Console.Write("Path to geometry input: ");
-                    var inPath = System.Console.ReadLine();
+                    inPath = System.Console.ReadLine();
                     if (string.IsNullOrEmpty(inPath))
                     {
                         System.Console.WriteLine("Must provide a valid input path");
@@ -28,7 +34,7 @@ public class Program
                     }
 
                     System.Console.Write("Path to triangulation output: ");
-                    var outPath = System.Console.ReadLine();
+                    outPath = System.Console.ReadLine();
                     if (string.IsNullOrEmpty(outPath))
                     {
                         System.Console.WriteLine("Must provide a valid output path");
@@ -43,12 +49,51 @@ public class Program
                     else
                         exclusionRad = double.Parse(exclusionRadStr);
                     
-                    var inputGeometry = inPath.Deserialise<InputGeometry>();
+                    inputGeometry = inPath.Deserialise<InputGeometry>();
                     var mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50, exclusionRad);
                     mesh.Save(outPath, 1);
                     System.Console.WriteLine("Triangulation saved to disk");
                     break;
                 case "2":
+                    System.Console.Write("Path to geometry input: ");
+                    inPath = System.Console.ReadLine();
+                    if (string.IsNullOrEmpty(inPath))
+                    {
+                        System.Console.WriteLine("Must provide a valid input path");
+                        break;
+                    }
+                    
+                    System.Console.Write("Spawn seed (default 100): ");
+                    var spawnSeedStr = System.Console.ReadLine();
+                    int spawnSeed;
+                    if (string.IsNullOrEmpty(spawnSeedStr))
+                        spawnSeed = 100;
+                    else
+                        spawnSeed = int.Parse(spawnSeedStr);
+                    
+                    inputGeometry = inPath.Deserialise<InputGeometry>();
+                    const float timeStep = 0.1f;
+                    var config = new SimulationConfig(inputGeometry, timeStep, 1, spawnSeed);
+                    var simulator = new SimulationEngine(config);
+                    
+                    while (true)
+                    {
+                        var snapshot = simulator.StepSimulation();
+
+                        if (snapshot.Step % 60 == 0)
+                        {
+                            System.Console.WriteLine(snapshot);
+                        }
+
+                        if (snapshot.AllComplete)
+                        {
+                            System.Console.WriteLine("Simulation finished");
+                            System.Console.WriteLine(snapshot);
+                            break;
+                        }
+                    }
+                    break;
+                case "3":
                     complete = true;
                     break;
             }
