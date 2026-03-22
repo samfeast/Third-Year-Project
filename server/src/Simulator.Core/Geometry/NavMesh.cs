@@ -230,7 +230,7 @@ public class NavMesh(int cellSize)
         return null;
     }
 
-    private static LongFraction Sign(Vector2Fraction a, Vector2Fraction b, Vector2Fraction c)
+    public static LongFraction Sign(Vector2Fraction a, Vector2Fraction b, Vector2Fraction c)
     {
         return (b.X - a.X) * (c.Y - a.Y)
                - (b.Y - a.Y) * (c.X - a.X);

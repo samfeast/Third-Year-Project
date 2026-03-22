@@ -42,8 +42,13 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
 
     public Vector2 GetNormalized()
     {
-        var magnitude = Math.Sqrt(X * X + Y * Y);
+        var magnitude = GetMagnitude();
         return new Vector2(X / magnitude, Y / magnitude);
+    }
+
+    public double GetMagnitude()
+    {
+        return Math.Sqrt(X * X + Y * Y);
     }
 
     public override string ToString() => $"({X}, {Y})";

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
 
@@ -11,60 +12,64 @@ public struct AgentSnapshot(int id, Vector2 position, double speed, bool reached
     public readonly bool ReachedDestination = reachedDestination;
 }
 
-public class Agent(int id, int startStep, double _maxSpeed, Vector2 startPos)
+public class Agent(NavMesh navMesh, int id, double maxSpeed, Vector2Fraction startPos, Vector2Fraction target)
 {
-    private List<Vector2Fraction> _waypoints = [];
-    private int _nextWaypointIndex = 0;
+
+    private List<NavMesh.Portal> _portals = navMesh.GetPortals(startPos.Evaluate(), target.Evaluate());
     
-    public Vector2 Position = startPos;
-    public Vector2 NextWaypoint => _waypoints[_nextWaypointIndex].Evaluate();
+    public Vector2Fraction Position = startPos;
     public int Id = id;
-    public int StartStep = startStep;
-
-    // Generate waypoints from current position to destination across provided navMesh
-    public void ComputePath(NavMesh navMesh, Vector2 destination)
-    {
-        var portals = navMesh.GetPortals(Position, destination);
-        _waypoints = navMesh.GetFullFunnelPath(Position.ToVector2Fraction(), portals);
-        _nextWaypointIndex = 0;
-    }
-
-    // Return true if journey complete
+    public double MaxSpeed = maxSpeed;
+    public Vector2Fraction Destination = target;
+    
     public AgentSnapshot Update(double timeStep)
     {
-        var distToTravel = _maxSpeed * timeStep;
-        while (distToTravel > -1e-6)
-        {
-            // Do not move if already at final waypoint
-            if (_nextWaypointIndex >= _waypoints.Count)
-                return new AgentSnapshot(Id, Position, _maxSpeed, true);
+        var nextTurningPoint = navMesh.GetNextTurningPoint(Position, _portals);
+        
+        var directionVector = (nextTurningPoint - Position).Evaluate().GetNormalized();
+        var preferredVelocity = directionVector * MaxSpeed;
 
-            
-            var distToNextWaypoint = DistToNextWaypoint();
-            if (distToNextWaypoint > distToTravel)
-            {
-                MoveTowardsNextWaypoint(distToTravel);
+        // Return early if agent can reach destination this step
+        if (nextTurningPoint == Destination && MaxSpeed * timeStep >= (Destination - Position).Evaluate().GetMagnitude())
+        {
+            return new AgentSnapshot(Id, Destination.Evaluate(), MaxSpeed, true);
+        }
+        
+        // If we can reach the next turning point this step, go directly to that point, otherwise go in that direction
+        Vector2Fraction nextPosition;
+        if (preferredVelocity.GetMagnitude() * timeStep >= (nextTurningPoint - Position).Evaluate().GetMagnitude())
+        {
+            nextPosition = nextTurningPoint;
+        }
+        else
+        {
+            var positionDelta = (preferredVelocity * timeStep).Round(1).ToVector2Fraction();
+            nextPosition = Position + positionDelta;
+        }
+        
+        var crossedPortals = 0;
+        // Keep crossing portals until encountering one we haven't crossed
+        foreach (var portal in _portals)
+        {
+            if (portal.Left == portal.Right) continue;
+            // Condition met if nextPoint is to the right of the left->right portal vector
+            if (NavMesh.Sign(portal.Left, portal.Right, nextPosition) >= LongFraction.Zero)
+                crossedPortals++;
+            else
                 break;
-            }
-            
-            MoveTowardsNextWaypoint(distToNextWaypoint);
-            distToTravel -= distToNextWaypoint;
-            _nextWaypointIndex++;
         }
 
-        return new AgentSnapshot(Id, Position, _maxSpeed, false);
-    }
+        Position = nextPosition;
 
-    private double DistToNextWaypoint()
-    {
-        var difference = NextWaypoint - Position;
-        return Math.Sqrt(difference.X * difference.X + difference.Y * difference.Y);
-    }
-
-    private void MoveTowardsNextWaypoint(double distance)
-    {
-        var directionVector = NextWaypoint - Position;
-        if (directionVector is { X: 0, Y: 0 } || distance == 0) return;
-        Position += directionVector.GetNormalized() * distance;
+        // If we would be removing all remaining portals, add the destination and return
+        // Rarely used - only when we get instability around the final portal
+        if (crossedPortals >= _portals.Count)
+        {
+            throw new UnreachableException();
+        }
+        
+        _portals.RemoveRange(0, crossedPortals);
+        
+        return new AgentSnapshot(Id, Position.Evaluate(), MaxSpeed, false);
     }
 }

@@ -159,6 +159,7 @@ public readonly struct LongFraction : IEquatable<LongFraction>
     {
         if (IsInfinity) return double.PositiveInfinity;
         
+        if (_denominator == 1) return _numerator;
         return _numerator / (double)_denominator;
     }
     

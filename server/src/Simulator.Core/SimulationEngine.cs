@@ -28,34 +28,27 @@ public class SimulationEngine
         var endPoints = points.Skip(config.NumAgents).ToArray();
         
         // Create the agents at the start positions on step 0
-        CreateAgents(0, startPoints);
-
-        // Calculate paths to end positions
-        for (int i = 0; i < config.NumAgents; i++)
-        {
-            var target = config.Target ?? endPoints[i];
-            LiveAgents[i].ComputePath(Mesh, target);
-        }
+        CreateAgents(startPoints, endPoints);
     }
 
-    private void CreateAgents(int startStep, Vector2[] startPoints)
+    private void CreateAgents(Vector2Fraction[] startPoints, Vector2Fraction[] endPoints)
     {
         for (int i = 0; i < startPoints.Length; i++)
         {
             // Shape and scale parameters taken from Poulos et al.
             var speed = StatisticalDistributions.SampleWeibull(_rng, 10.14f, 1.41f) * 100f;
-            LiveAgents.Add(new Agent(i, startStep, speed, startPoints[i]));
+            LiveAgents.Add(new Agent(Mesh, i, speed, startPoints[i], endPoints[i]));
         }
     }
 
     // Generate n random points on the navmesh (uniformly distributed)
-    private Vector2[] GenerateRandomPoints(int n)
+    private Vector2Fraction[] GenerateRandomPoints(int n)
     {
-        var points = new Vector2[n];
+        var points = new Vector2Fraction[n];
         
         for (int i = 0; i < n; i++)
         {
-            points[i] = GeneratePoint();
+            points[i] = GeneratePoint().ToVector2Fraction();
         }
 
         return points;
