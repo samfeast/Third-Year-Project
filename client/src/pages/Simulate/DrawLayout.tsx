@@ -18,7 +18,7 @@ export default function DrawLayout({ layout }: { layout: Layout }) {
           layout.positive.slice(1).forEach(([x, y]) => g.lineTo(x, y));
           g.closePath();
           g.fill({ color: 0xffffff });
-          g.stroke({ color: 0x000000, width: 12 });
+          g.stroke({ color: 0x000000, width: 120 });
         }
 
         // Inner polygons
@@ -29,7 +29,7 @@ export default function DrawLayout({ layout }: { layout: Layout }) {
           poly.slice(1).forEach(([x, y]) => g.lineTo(x, y));
           g.closePath();
           g.fill({ color: 0xcccccc });
-          g.stroke({ color: 0x000000, width: 12 });
+          g.stroke({ color: 0x000000, width: 120 });
         });
       }}
     />

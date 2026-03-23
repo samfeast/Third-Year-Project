@@ -11,8 +11,8 @@ const viridisColors = [
 ];
 
 function speedToColour(speed: number) {
-  const MIN_SPEED = 90;
-  const MAX_SPEED = 150;
+  const MIN_SPEED = 900;
+  const MAX_SPEED = 1500;
   const t = Math.min(
     Math.max((speed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED), 0),
     1,

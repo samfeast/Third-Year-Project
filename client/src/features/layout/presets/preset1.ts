@@ -3,9 +3,9 @@ import type { Layout } from "../types";
 
 const positive: Point[] = [
   [0, 0],
-  [2500, 0],
-  [2500, 2500],
-  [0, 2500],
+  [25000, 0],
+  [25000, 25000],
+  [0, 25000],
 ];
 
 export const preset1: Layout = {
