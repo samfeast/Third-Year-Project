@@ -25,7 +25,7 @@ public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
     public Vector2 GetNormalized()
     {
         var magnitude = GetLength();
-        return new Vector2(X / magnitude, Y / magnitude);
+        return magnitude == 0 ? new Vector2(0, 0) : new Vector2(X / magnitude, Y / magnitude);
     }
     
     // Convert to a Vector2Fraction: (X/1,Y/1)

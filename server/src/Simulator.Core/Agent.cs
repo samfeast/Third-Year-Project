@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
+using Simulator.Core.Utils;
 
 namespace Simulator.Core;
 
@@ -16,15 +16,45 @@ public class Agent(double timeStep, NavMesh navMesh, int id, int maxSpeed, Vecto
 {
     private List<NavMesh.Portal> _portals = navMesh.GetPortals(startPos, target);
     
-    public Vector2Int Position = startPos;
     public int Id = id;
+    
     public int MaxSpeed = maxSpeed;
     public Vector2Int Destination = target;
     
-    public AgentSnapshot UpdatePosition(Vector2 preferredVelocity)
+    public Vector2Int Position = startPos;
+    public Vector2 Velocity = new(0, 0);
+
+    public Vector2 GetVelocity(MovementConstraints constraints)
     {
+        var preferredVelocity = GetPreferredVelocity();
+        return preferredVelocity;
+    }
+    
+    private Vector2 GetPreferredVelocity()
+    {
+        var nextTurningPoint = NavMesh.GetNextTurningPoint(Position, _portals);
+
+        if (Position == Destination) 
+            return new Vector2(0, 0);
+        
+        var directionVector = (nextTurningPoint - Position).GetNormalized();
+        // If the next turning point is the destination, speed is determined by the smaller of the max speed and the
+        // speed required to reach the destination on this step
+        var preferredSpeed = nextTurningPoint == Destination
+            ? Math.Min(MaxSpeed, (Destination - Position).GetLength() / timeStep)
+            : MaxSpeed;
+        
+        return directionVector * preferredSpeed;
+    }
+    
+    public AgentSnapshot UpdatePosition(Vector2 velocity)
+    {
+        // Snap to destination if agent is within 10 units (1cm)
+        if ((Position - Destination).GetLength() < 10)
+            return new AgentSnapshot(Id, Destination, velocity.GetLength(), true);
+        
         // Position delta if we weren't on a fixed grid resolution
-        var positionDelta = preferredVelocity * timeStep;
+        var positionDelta = velocity * timeStep;
         
         var positionDeltaInt = positionDelta.ToVector2Int();
         // Candidate positions deltas which we could actually move by
@@ -43,46 +73,23 @@ public class Agent(double timeStep, NavMesh navMesh, int id, int maxSpeed, Vecto
                 validCandidatePositionDeltas.Add(candidate);
         }
         
-        Debug.Assert(validCandidatePositionDeltas.Count > 0, "Expected at least one valid candidate");
-        
         // Select the candidate which crosses the most portals
-        var maximalCandidate = new Vector2Int();
+        var maximalCandidate = default(Vector2Int);
         var maximalCrossedPortals = -1;
-        var foundCandidate = false;
         foreach (var candidate in validCandidatePositionDeltas)
         {
-            var candidateCrossedPortals = NavMesh.GetNumCrossedPortals(Position + candidate, _portals);
-
-            if (candidateCrossedPortals > maximalCrossedPortals)
-            {
-                foundCandidate = true;
-                maximalCandidate = candidate;
-                maximalCrossedPortals = candidateCrossedPortals;
-            }
+            var crossed = NavMesh.GetNumCrossedPortals(Position + candidate, _portals);
+            if (crossed <= maximalCrossedPortals) continue;
+            
+            maximalCandidate = candidate;
+            maximalCrossedPortals = crossed;
         }
         
-        Debug.Assert(foundCandidate, "Expected to have found a viable candidate");
-        Debug.Assert(maximalCrossedPortals < _portals.Count, "Didn't expect to try removing all portals");
-        
-        // Update Position and remove portals crossed on this step
+        // Update Position and Velocity, and remove portals crossed on this step
         Position += maximalCandidate;
+        Velocity = velocity;
         _portals.RemoveRange(0, maximalCrossedPortals);
         
-        return new AgentSnapshot(Id, Position, preferredVelocity.GetLength(), false);
-    }
-
-    public Vector2 GetPreferredVelocity()
-    {
-        var nextTurningPoint = NavMesh.GetNextTurningPoint(Position, _portals);
-        
-        var directionVector = (nextTurningPoint - Position).GetNormalized();
-        // If the next turning point is the destination, speed is determined by the smaller of the max speed and the
-        // speed required to reach the destination on this step
-        var preferredSpeed = nextTurningPoint == Destination
-            ? Math.Min(MaxSpeed, (Destination - Position).GetLength() / timeStep)
-            : MaxSpeed;
-
-        return directionVector * preferredSpeed;
-        
+        return new AgentSnapshot(Id, Position, velocity.GetLength(), false);
     }
 }

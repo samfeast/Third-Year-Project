@@ -1,7 +1,7 @@
 using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Geometry.Utils;
 
-namespace Simulator.Core;
+namespace Simulator.Core.Utils;
 
 public struct SimulationConfig(InputGeometry geometry, double timeStep, int numAgents, int? seed = null, Vector2? target = null)
 {

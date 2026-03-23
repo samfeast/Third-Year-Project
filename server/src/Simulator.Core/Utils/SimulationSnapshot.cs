@@ -1,6 +1,6 @@
 using Simulator.Core.Geometry.Primitives;
 
-namespace Simulator.Core;
+namespace Simulator.Core.Utils;
 
 public struct SimulationSnapshot(int n, int step)
 {

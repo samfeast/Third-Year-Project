@@ -73,40 +73,42 @@ public class SimulationEngine
 
     public SimulationSnapshot StepSimulation()
     {
-        var snapshot = new SimulationSnapshot(LiveAgents.Count, Step);
+        var constraints = new MovementConstraints[LiveAgents.Count];
         
-        var allComplete = true;
-        var completeThisStep = new List<Agent>();
-        foreach (var agent in LiveAgents)
+        // Populate ConflictingAgents and ConflictingWalls for all agents
+
+        // Later parallelize this loop with Parallel.For()
+        var agentSnapshots = new AgentSnapshot[LiveAgents.Count];
+        for (int i = 0; i < LiveAgents.Count; i++)
         {
-            AgentSnapshot agentSnapshot;
-            // An agent is deemed to have reached its destination if it is within 10 units (1cm)
-            if ((agent.Position - agent.Destination).GetLength() < 10)
-            {
-                agentSnapshot = new AgentSnapshot(agent.Id, agent.Destination, agent.MaxSpeed, true);
-            }
-            else
-            {
-                var preferredVelocity = agent.GetPreferredVelocity();
-                var velocity = preferredVelocity;
-                agentSnapshot = agent.UpdatePosition(velocity);
-            }
-            
+            var agent = LiveAgents[i];
+            var velocity = agent.GetVelocity(constraints[i]);
+            agentSnapshots[i] = agent.UpdatePosition(velocity);
+        }
+        
+        var newLiveAgents = new List<Agent>(LiveAgents.Count);
+        var snapshot = new SimulationSnapshot(LiveAgents.Count, Step);
+        var allComplete = true;
+        for (int i = 0; i < agentSnapshots.Length; i++)
+        {
+            var agentSnapshot = agentSnapshots[i];
+            var agent = LiveAgents[i];
+
             snapshot.AddAgent(agentSnapshot.Id, agentSnapshot.Position, agentSnapshot.Speed);
 
-            if (agentSnapshot.ReachedDestination)
-                completeThisStep.Add(agent);
-            else
+            if (!agentSnapshot.ReachedDestination)
+            {
+                newLiveAgents.Add(agent);
                 allComplete = false;
+            }
         }
-
-        foreach (var completeAgent in completeThisStep)
-            LiveAgents.Remove(completeAgent);
         
         snapshot.AllComplete = allComplete;
         snapshot.Step = Step;
 
         Step++;
+        LiveAgents.Clear();
+        LiveAgents.AddRange(newLiveAgents);
         
         return snapshot;
     }
