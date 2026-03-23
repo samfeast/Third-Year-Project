@@ -34,54 +34,16 @@ public class Agent(NavMesh navMesh, int id, int maxSpeed, Vector2Int startPos, V
         var directionVector = (nextTurningPoint - Position).GetNormalized();
         var preferredVelocity = directionVector * MaxSpeed;
         
-        Vector2Int nextPosition;
-        if (preferredVelocity.GetMagnitude() * timeStep >= (nextTurningPoint - Position).GetLength())
-        {
-            nextPosition = nextTurningPoint;
-        }
-        else
-        {
-            var positionDelta = (preferredVelocity * timeStep).ToVector2Int();
-            nextPosition = Position + positionDelta;
-        }
-        
-        var crossedPortals = 0;
-        // Keep crossing portals until encountering one we haven't crossed
-        foreach (var portal in _portals)
-        {
-            if (portal.Left == portal.Right) continue;
-            // Condition met if nextPoint is to the right of the left->right portal vector
-            if (Sign(portal.Left, portal.Right, nextPosition) >= 0)
-                crossedPortals++;
-            else
-                break;
-        }
-
-        Position = nextPosition;
-
-        // If we would be removing all remaining portals, add the destination and return
-        // Rarely used - only when we get instability around the final portal
-        if (crossedPortals >= _portals.Count)
-        {
-            throw new UnreachableException();
-        }
-        
-        _portals.RemoveRange(0, crossedPortals);
-        
-        return new AgentSnapshot(Id, Position, MaxSpeed, false);
-
-        /*
-        // Calculate true position delta
+        // Position delta if we weren't on a fixed grid resolution
         var positionDelta = preferredVelocity * timeStep;
-
-        // Position delta rounded down to next 0.1 interval
-        var fixedPositionDelta = new Vector2Int((int)positionDelta.X, (int)positionDelta.Y);
-        // List of candidate positions delta which we could actually move by
+        
+        var positionDeltaInt = positionDelta.ToVector2Int();
+        // Candidate positions deltas which we could actually move by
         List<Vector2Int> candidatePositionDeltas = [
-            new (fixedPositionDelta.X + 1, fixedPositionDelta.Y + 1), 
-            new (fixedPositionDelta.X + 1, fixedPositionDelta.Y), 
-            new (fixedPositionDelta.X, fixedPositionDelta.Y + 1), 
-            new (fixedPositionDelta.X, fixedPositionDelta.Y)
+            positionDeltaInt + new Vector2Int(1, 1), 
+            positionDeltaInt + new Vector2Int(1, 0), 
+            positionDeltaInt + new Vector2Int(0, 1), 
+            positionDeltaInt
         ];
         
         // Discard candidates which are outside the navigable area
@@ -93,31 +55,30 @@ public class Agent(NavMesh navMesh, int id, int maxSpeed, Vector2Int startPos, V
         }
         
         Debug.Assert(validCandidatePositionDeltas.Count > 0, "Expected at least one valid candidate");
-
+        
         // Select the candidate which crosses the most portals
-        var maximalCandidate= new Vector2Int();
+        var maximalCandidate = new Vector2Int();
         var maximalCrossedPortals = -1;
+        var foundCandidate = false;
         foreach (var candidate in validCandidatePositionDeltas)
         {
-            var candidateCrossedPortals = NavMesh.GetNumCrossedPortals(candidate, _portals);
+            var candidateCrossedPortals = NavMesh.GetNumCrossedPortals(Position + candidate, _portals);
 
             if (candidateCrossedPortals > maximalCrossedPortals)
             {
+                foundCandidate = true;
                 maximalCandidate = candidate;
                 maximalCrossedPortals = candidateCrossedPortals;
             }
         }
-
+        
+        Debug.Assert(foundCandidate, "Expect to have found a viable candidate");
+        Debug.Assert(maximalCrossedPortals < _portals.Count, "Didn't expect to try removing all portals");
+        
+        // Update Position and remove portals crossed on this step
         Position += maximalCandidate;
         _portals.RemoveRange(0, maximalCrossedPortals);
         
         return new AgentSnapshot(Id, Position, MaxSpeed, false);
-        */
-    }
-    
-    private static int Sign(Vector2Int a, Vector2Int b, Vector2Int c)
-    {
-        return (b.X - a.X) * (c.Y - a.Y)
-               - (b.Y - a.Y) * (c.X - a.X);
     }
 }
