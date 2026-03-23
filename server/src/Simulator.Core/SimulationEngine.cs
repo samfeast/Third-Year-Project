@@ -31,34 +31,34 @@ public class SimulationEngine
         CreateAgents(startPoints, endPoints);
     }
 
-    private void CreateAgents(Vector2Fraction[] startPoints, Vector2Fraction[] endPoints)
+    private void CreateAgents(Vector2Int[] startPoints, Vector2Int[] endPoints)
     {
         for (int i = 0; i < startPoints.Length; i++)
         {
             // Shape and scale parameters taken from Poulos et al.
-            var speed = StatisticalDistributions.SampleWeibull(_rng, 10.14f, 1.41f) * 100f;
+            var speed = (int)Math.Round(StatisticalDistributions.SampleWeibull(_rng, 10.14f, 1.41f) * 1000);
             LiveAgents.Add(new Agent(Mesh, i, speed, startPoints[i], endPoints[i]));
         }
     }
 
     // Generate n random points on the navmesh (uniformly distributed)
-    private Vector2Fraction[] GenerateRandomPoints(int n)
+    private Vector2Int[] GenerateRandomPoints(int n)
     {
-        var points = new Vector2Fraction[n];
+        var points = new Vector2Int[n];
         
         for (int i = 0; i < n; i++)
         {
-            points[i] = GeneratePoint().ToVector2Fraction();
+            points[i] = GeneratePoint();
         }
 
         return points;
     }
 
-    private Vector2 GeneratePoint()
+    private Vector2Int GeneratePoint()
     {
         Debug.Assert(Mesh != null, "Cannot generate point without a mesh");
         
-        int rand = _rng.Next(Mesh.CumulativeDoubleAreas.Last());
+        var rand = _rng.NextInt64(Mesh.CumulativeDoubleAreas.Last());
 
         for (int i = 0; i < Mesh.CumulativeDoubleAreas.Count; i++)
         {

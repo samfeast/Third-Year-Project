@@ -12,20 +12,20 @@ public class NavMesh(int cellSize)
         public readonly int[] Neighbours = [-1, -1, -1];
         public readonly Vector2Fraction Centroid = triangle.GetCentroid();
         public readonly Triangle Triangle = triangle;
-        public readonly int DoubleArea = triangle.GetDoubleArea();
+        public readonly long DoubleArea = triangle.GetDoubleArea();
     }
 
-    public struct Portal(Vector2Fraction left, Vector2Fraction right)
+    public struct Portal(Vector2Int left, Vector2Int right)
     {
-        public readonly Vector2Fraction Left = left;
-        public readonly Vector2Fraction Right = right;
+        public readonly Vector2Int Left = left;
+        public readonly Vector2Int Right = right;
     }
 
     public readonly List<Node> Nodes = [];
     public readonly UniformGrid Grid = new(cellSize);
-    public readonly List<int> CumulativeDoubleAreas = [];
+    public readonly List<long> CumulativeDoubleAreas = [];
 
-    public List<Portal> GetPortals(Vector2 source, Vector2 destination)
+    public List<Portal> GetPortals(Vector2Int source, Vector2Int destination)
     {
         // Degrades when starting and ending on boundaries
         var startNode = GetCurrentNode(source.X, source.Y)[0];
@@ -36,14 +36,14 @@ public class NavMesh(int cellSize)
         
         var portals = GetPortalsFromChannel(channel);
         // Add degenerate portals for destination
-        portals.Add(new Portal(destination.ToVector2Fraction(), destination.ToVector2Fraction()));
+        portals.Add(new Portal(destination, destination));
 
         return portals;
     }
 
-    public List<Vector2Fraction> GetFullFunnelPath(Vector2Fraction position, List<Portal> portals)
+    public static List<Vector2Int> GetFullFunnelPath(Vector2Int position, List<Portal> portals)
     {
-        List<Vector2Fraction> path = [position];
+        List<Vector2Int> path = [position];
         // Portals should never end up empty, could be while (true) but this acts as a guard
         while (portals.Count > 0)
         {
@@ -56,15 +56,7 @@ public class NavMesh(int cellSize)
                 return path;
             
             // Remove portals which were crossed to reach the next point
-            var crossedPortals = 0;
-            foreach (var portal in portals)
-            {
-                // Condition met if nextPoint is to the right of the left->right portal vector
-                if (Sign(portal.Left, portal.Right, nextPoint) >= LongFraction.Zero)
-                    crossedPortals++;
-                else
-                    break;
-            }
+            var crossedPortals = GetNumCrossedPortals(nextPoint, portals);
 
             // If we would be removing all remaining portals, add the destination and return
             if (crossedPortals >= portals.Count)
@@ -79,7 +71,22 @@ public class NavMesh(int cellSize)
         throw new UnreachableException();
     }
 
-    public Vector2Fraction GetNextTurningPoint(Vector2Fraction position, List<Portal> remainingPortals)
+    public static int GetNumCrossedPortals(Vector2Int position, List<Portal> remainingPortals)
+    {
+        var crossedPortals = 0;
+        foreach (var portal in remainingPortals)
+        {
+            if (portal.Left == portal.Right) continue;
+            // Condition met if position is to the right of the left->right portal vector
+            if (Sign(portal.Left, portal.Right, position) >= 0)
+                crossedPortals++;
+            else
+                break;
+        }
+        return crossedPortals;
+    }
+
+    public static Vector2Int GetNextTurningPoint(Vector2Int position, List<Portal> remainingPortals)
     {
         // Current funnel state
         var portalApex = position;
@@ -92,10 +99,10 @@ public class NavMesh(int cellSize)
             var newRight = remainingPortals[i].Right;
 
             // Right boundary
-            if (Sign(portalApex, portalRight, newRight) >= LongFraction.Zero)
+            if (Sign(portalApex, portalRight, newRight) >= 0)
             {
                 if (portalApex == portalRight ||
-                    Sign(portalApex, portalLeft, newRight) < LongFraction.Zero)
+                    Sign(portalApex, portalLeft, newRight) < 0)
                 {
                     portalRight = newRight;
                 }
@@ -106,10 +113,10 @@ public class NavMesh(int cellSize)
             }
 
             // Left boundary
-            if (Sign(portalApex, portalLeft, newLeft) <= LongFraction.Zero)
+            if (Sign(portalApex, portalLeft, newLeft) <= 0)
             {
                 if (portalApex == portalLeft ||
-                    Sign(portalApex, portalRight, newLeft) > LongFraction.Zero)
+                    Sign(portalApex, portalRight, newLeft) > 0)
                 {
                     portalLeft = newLeft;
                 }
@@ -123,20 +130,24 @@ public class NavMesh(int cellSize)
         return remainingPortals[^1].Left;
     }
 
-    private List<int> GetCurrentNode(double x, double y)
+    public List<int> GetCurrentNode(Vector2Int position)
+    {
+        return GetCurrentNode(position.X, position.Y);
+    }
+
+    public List<int> GetCurrentNode(int x, int y)
     {
         var possibleNodeIndices = Grid.Get(x, y);
 
         var rtn = new List<int>(possibleNodeIndices.Count);
         foreach (var i in possibleNodeIndices)
         {
-            if (Nodes[i].Triangle.ContainsPoint(new Vector2(x, y)))
+            if (Nodes[i].Triangle.ContainsPoint(new Vector2Int(x, y)))
                 rtn.Add(i);
         }
-
-        Debug.Assert(rtn.Count > 0, $"Failed to find node: {x} {y}");
+        
         if (rtn.Count > 1)
-            Console.WriteLine($"WARNING: Position inside {rtn.Count} nodes");
+            Console.WriteLine($"WARNING: ({x}, {y}) inside {rtn.Count} nodes");
         return rtn;
     }
 
@@ -221,8 +232,8 @@ public class NavMesh(int cellSize)
         {
             if (first.Neighbours[i] == secondIndex)
             {
-                var left = first.Vertices[i].ToVector2Fraction();
-                var right = first.Vertices[(i + 1) % 3].ToVector2Fraction();
+                var left = first.Vertices[i];
+                var right = first.Vertices[(i + 1) % 3];
                 return new Portal(left, right);
             }
         }
@@ -230,7 +241,7 @@ public class NavMesh(int cellSize)
         return null;
     }
 
-    public static LongFraction Sign(Vector2Fraction a, Vector2Fraction b, Vector2Fraction c)
+    private static int Sign(Vector2Int a, Vector2Int b, Vector2Int c)
     {
         return (b.X - a.X) * (c.Y - a.Y)
                - (b.Y - a.Y) * (c.X - a.X);

@@ -41,13 +41,13 @@ public class Program
                         break;
                     }
                     
-                    System.Console.Write("Geometry exclusion radius (default 22.5): ");
+                    System.Console.Write("Geometry exclusion radius (default 225mm): ");
                     var exclusionRadStr = System.Console.ReadLine();
-                    double exclusionRad;
+                    int exclusionRad;
                     if (string.IsNullOrEmpty(exclusionRadStr))
-                        exclusionRad = 22.5;
+                        exclusionRad = 225;
                     else
-                        exclusionRad = double.Parse(exclusionRadStr);
+                        exclusionRad = int.Parse(exclusionRadStr);
                     
                     inputGeometry = inPath.Deserialise<InputGeometry>();
                     var mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50, exclusionRad);

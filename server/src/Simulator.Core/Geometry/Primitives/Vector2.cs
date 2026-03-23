@@ -40,6 +40,11 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
         return new Vector2(Math.Round(X, places), Math.Round(Y, places));
     }
 
+    public Vector2Int ToVector2Int()
+    {
+        return new Vector2Int((int)X, (int)Y);
+    }
+
     public Vector2 GetNormalized()
     {
         var magnitude = GetMagnitude();

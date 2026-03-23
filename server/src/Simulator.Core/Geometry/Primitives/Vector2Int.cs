@@ -18,6 +18,15 @@ public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
     public override int GetHashCode() => HashCode.Combine(X, Y);
     
     public override string ToString() => $"({X}, {Y})";
+
+    public long GetSquaredLength() => (long)X * X + (long)Y * Y;
+    public double GetLength() => Math.Sqrt(GetSquaredLength());
+    
+    public Vector2 GetNormalized()
+    {
+        var magnitude = GetLength();
+        return new Vector2(X / magnitude, Y / magnitude);
+    }
     
     // Convert to a Vector2Fraction: (X/1,Y/1)
     public Vector2Fraction ToVector2Fraction()

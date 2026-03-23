@@ -77,7 +77,7 @@ public struct Triangle
         return Math.Abs(A.X * (B.Y - C.Y) + B.X * (C.Y - A.Y) + C.X * (A.Y - B.Y));
     }
 
-    public Vector2 GenerateRandomPoint(Random rng)
+    public Vector2Int GenerateRandomPoint(Random rng)
     {
         var bbox = GetBoundingBox();
         while (true)

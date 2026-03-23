@@ -116,8 +116,8 @@ public class Program
         // Load json layout into InputGeometry object
         var geometry = data.layout.Deserialise<InputGeometry>();
 
-        // Area is in cm^2 but agent density is in agents per m^2, so divide by 100^2
-        var numAgents = (int)(geometry.Area * data.agentDensity / 10_000);
+        // Area is in mm^2 but agent density is in agents per m^2, so divide by 1000^2
+        var numAgents = (int)(geometry.Area * data.agentDensity / 1_000_000);
                         
         var config = new SimulationConfig {
             Geometry = geometry,

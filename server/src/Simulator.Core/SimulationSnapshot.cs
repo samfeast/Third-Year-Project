@@ -7,11 +7,11 @@ public struct SimulationSnapshot(int n, int step)
     public int Step = step;
     public int StoredAgents = 0;
     public int[] Ids = new int[n];
-    public Vector2[] Positions = new Vector2[n];
+    public Vector2Int[] Positions = new Vector2Int[n];
     public double[] Speeds = new double[n];
     public bool AllComplete;
 
-    public void AddAgent(int id, Vector2 position, double speed)
+    public void AddAgent(int id, Vector2Int position, double speed)
     {
         Ids[StoredAgents] = id;
         Positions[StoredAgents] = position;

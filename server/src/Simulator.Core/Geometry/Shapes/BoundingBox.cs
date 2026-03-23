@@ -25,11 +25,11 @@ public class BoundingBox
         MaxY = Math.Max(MaxY, vertex.Y);
     }
 
-    public Vector2 GenerateRandomPoint(Random rng)
+    public Vector2Int GenerateRandomPoint(Random rng)
     {
         var x = rng.Next(MinX, MaxX + 1);
         var y = rng.Next(MinY, MaxY + 1);
 
-        return new Vector2(x, y);
+        return new Vector2Int(x, y);
     }
 }
