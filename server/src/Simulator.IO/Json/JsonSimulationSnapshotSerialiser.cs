@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Simulator.Core;
+using Simulator.Core.Utils;
 using Simulator.IO.Utils;
 
 namespace Simulator.IO.Json;
