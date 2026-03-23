@@ -42,16 +42,16 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
 
     public Vector2Int ToVector2Int()
     {
-        return new Vector2Int((int)X, (int)Y);
+        return new Vector2Int((int)Math.Floor(X), (int)Math.Floor(Y));
     }
 
     public Vector2 GetNormalized()
     {
-        var magnitude = GetMagnitude();
+        var magnitude = GetLength();
         return new Vector2(X / magnitude, Y / magnitude);
     }
 
-    public double GetMagnitude()
+    public double GetLength()
     {
         return Math.Sqrt(X * X + Y * Y);
     }

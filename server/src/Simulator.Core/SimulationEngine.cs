@@ -37,7 +37,7 @@ public class SimulationEngine
         {
             // Shape and scale parameters taken from Poulos et al.
             var speed = (int)Math.Round(StatisticalDistributions.SampleWeibull(_rng, 10.14f, 1.41f) * 1000);
-            LiveAgents.Add(new Agent(Mesh, i, speed, startPoints[i], endPoints[i]));
+            LiveAgents.Add(new Agent(TimeStep, Mesh, i, speed, startPoints[i], endPoints[i]));
         }
     }
 
@@ -79,7 +79,18 @@ public class SimulationEngine
         var completeThisStep = new List<Agent>();
         foreach (var agent in LiveAgents)
         {
-            var agentSnapshot = agent.Update(TimeStep);
+            AgentSnapshot agentSnapshot;
+            // An agent is deemed to have reached its destination if it is within 10 units (1cm)
+            if ((agent.Position - agent.Destination).GetLength() < 10)
+            {
+                agentSnapshot = new AgentSnapshot(agent.Id, agent.Destination, agent.MaxSpeed, true);
+            }
+            else
+            {
+                var preferredVelocity = agent.GetPreferredVelocity();
+                var velocity = preferredVelocity;
+                agentSnapshot = agent.UpdatePosition(velocity);
+            }
             
             snapshot.AddAgent(agentSnapshot.Id, agentSnapshot.Position, agentSnapshot.Speed);
 
