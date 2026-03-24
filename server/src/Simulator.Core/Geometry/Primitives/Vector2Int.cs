@@ -21,6 +21,7 @@ public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
 
     public long GetSquaredLength() => (long)X * X + (long)Y * Y;
     public double GetLength() => Math.Sqrt(GetSquaredLength());
+    public long Dot(Vector2Int other) => (long)X * other.X + (long)Y * other.Y;
     
     public Vector2 GetNormalized()
     {

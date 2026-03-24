@@ -50,11 +50,9 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
         var magnitude = GetLength();
         return new Vector2(X / magnitude, Y / magnitude);
     }
-
-    public double GetLength()
-    {
-        return Math.Sqrt(X * X + Y * Y);
-    }
+    
+    public double GetSquaredLength() => X * X + Y * Y;
+    public double GetLength() => Math.Sqrt(GetSquaredLength());
 
     public override string ToString() => $"({X}, {Y})";
 }

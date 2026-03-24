@@ -35,6 +35,9 @@ public class Agent(
     public Vector2 GetVelocity(MovementConstraints constraints)
     {
         var preferredVelocity = GetPreferredVelocity();
+        if (constraints.ConflictingAgents.Count == 0) return preferredVelocity;
+        
+        // ORCA logic here
         return preferredVelocity;
     }
 
@@ -58,7 +61,8 @@ public class Agent(
     public AgentSnapshot UpdatePosition(Vector2 velocity)
     {
         // Snap to destination if agent is within 10 units (1cm)
-        if ((Position - Destination).GetLength() < 10)
+        // Use squared distance to avoid square root
+        if ((Position - Destination).GetSquaredLength() < 100)
             return new AgentSnapshot(Id, Destination, velocity.GetLength(), true);
 
         // Position delta if we weren't on a fixed grid resolution

@@ -25,4 +25,9 @@ public struct EdgeKey(Vector2Int a, Vector2Int b) : IEquatable<EdgeKey>
         return HashCode.Combine(min, max);
     }
 
+    public override string ToString()
+    {
+        return _v0.X < _v1.X || (_v0.X == _v1.X && _v0.Y <= _v1.Y) ? $"{_v0} -> {_v1}" : $"{_v1} -> {_v0}";
+    }
+
 }

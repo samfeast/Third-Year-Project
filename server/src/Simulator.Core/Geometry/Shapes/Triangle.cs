@@ -86,6 +86,13 @@ public struct Triangle
             if (ContainsPoint(p)) return p;
         }
     }
+
+    public readonly IEnumerable<(Vector2Int a, Vector2Int b, int index)> GetEdges()
+    {
+        yield return (A, B, 0);
+        yield return (B, C, 1);
+        yield return (C, A, 2);
+    }
     
     public override string ToString() => $"<{A}, {B}, {C}>";
 }

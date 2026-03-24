@@ -31,6 +31,36 @@ public class UniformGrid<T>(int cellSize)
         var cell = ComputeCell(x, y);
         return _grid.GetValueOrDefault(cell, _empty);
     }
+    public List<T> Get(Vector2 position) => Get(position.X, position.Y);
+    public List<T> Get(Vector2Int position) => Get(position.X, position.Y);
+    
+    // Get the contents of cells within a specified distance of a point
+    // Returns a square of cells rather than a circle (could be optimised)
+    // Returns enumerable to avoid allocations every call
+    public IEnumerable<List<T>> GetRange(double x, double y, double radius)
+    {
+        var centerCell = ComputeCell(x, y);
+
+        // Convert radius to cells
+        int cellRadius = (int)Math.Ceiling(radius / CellSize);
+
+        // Generate square of cells
+        var startX = centerCell.X - cellRadius;
+        var endX   = centerCell.X + cellRadius;
+        var startY = centerCell.Y - cellRadius;
+        var endY   = centerCell.Y + cellRadius;
+
+        for (int cellY = startY; cellY <= endY; cellY++)
+        {
+            for (int cellX = startX; cellX <= endX; cellX++)
+            {
+                if (_grid.TryGetValue((cellX, cellY), out var list))
+                    yield return list;
+            }
+        }
+    }
+    public IEnumerable<List<T>> GetRange(Vector2 position, double radius) => GetRange(position.X, position.Y, radius);
+    public IEnumerable<List<T>> GetRange(Vector2Int position, double radius) => GetRange(position.X, position.Y, radius);
 
     public void RemoveFromCell(T value, (int x, int y) cell)
     {
@@ -38,6 +68,7 @@ public class UniformGrid<T>(int cellSize)
         {
             int index = list.IndexOf(value);
             if (index < 0) return; // Value not found
+            
             // Avoids shifting list with Remove() (copy last element into deleted index, then remove last)
             int last = list.Count - 1;
             list[index] = list[last];

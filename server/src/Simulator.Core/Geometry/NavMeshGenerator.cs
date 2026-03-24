@@ -65,9 +65,8 @@ public static class NavMeshGenerator
         for (int i = 0; i < triangles.Count; i++)
         {
             var t = triangles[i];
-            AddEdge(edgeMap, new EdgeKey(t.A, t.B), i, 0); // A->B
-            AddEdge(edgeMap, new EdgeKey(t.B, t.C), i, 1); // B->C
-            AddEdge(edgeMap, new EdgeKey(t.C, t.A), i, 2); // C->A
+            foreach (var (a, b, edgeIndex) in t.GetEdges())
+                AddEdge(edgeMap, new EdgeKey(a, b), i, edgeIndex);
         }
 
         return edgeMap;
