@@ -22,7 +22,7 @@ public class NavMesh(int cellSize)
     }
 
     public readonly List<Node> Nodes = [];
-    public readonly UniformGrid Grid = new(cellSize);
+    public readonly UniformGrid<int> Grid = new(cellSize);
     public readonly List<long> CumulativeDoubleAreas = [];
 
     public List<Portal> GetPortals(Vector2Int source, Vector2Int destination)

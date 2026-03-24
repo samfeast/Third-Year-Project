@@ -12,6 +12,8 @@ public class SimulationEngine
     public List<Agent> LiveAgents;
     public int Step = 1;
     public double TimeStep;
+
+    public UniformGrid<Agent> AgentGrid = new(1500);
     
     public SimulationEngine(SimulationConfig config)
     {
@@ -37,7 +39,12 @@ public class SimulationEngine
         {
             // Shape and scale parameters taken from Poulos et al.
             var speed = (int)Math.Round(StatisticalDistributions.SampleWeibull(_rng, 10.14f, 1.41f) * 1000);
-            LiveAgents.Add(new Agent(TimeStep, Mesh, i, speed, startPoints[i], endPoints[i]));
+            
+            var cell = AgentGrid.ComputeCell(startPoints[i]);
+            var agent = new Agent(TimeStep, Mesh, i, speed, startPoints[i], endPoints[i], cell);
+            
+            LiveAgents.Add(agent);
+            AgentGrid.AddToCell(agent, cell);
         }
     }
 
@@ -91,15 +98,27 @@ public class SimulationEngine
         var allComplete = true;
         for (int i = 0; i < agentSnapshots.Length; i++)
         {
-            var agentSnapshot = agentSnapshots[i];
             var agent = LiveAgents[i];
-
+            var agentSnapshot = agentSnapshots[i];
             snapshot.AddAgent(agentSnapshot.Id, agentSnapshot.Position, agentSnapshot.Speed);
 
             if (!agentSnapshot.ReachedDestination)
             {
                 newLiveAgents.Add(agent);
                 allComplete = false;
+                
+                var newCell = AgentGrid.ComputeCell(agentSnapshot.Position);
+                // If the agent has remained in the same grid cell, continue
+                if (agent.CurrentCell == newCell) continue;
+                // Otherwise update the position in AgentGrid
+                AgentGrid.RemoveFromCell(agent, agent.CurrentCell);
+                AgentGrid.AddToCell(agent, newCell);
+                agent.CurrentCell = newCell;
+            }
+            else
+            {
+                // If the agent has reached its destination remove it from AgentGrid
+                AgentGrid.RemoveFromCell(agent, agent.CurrentCell);
             }
         }
         

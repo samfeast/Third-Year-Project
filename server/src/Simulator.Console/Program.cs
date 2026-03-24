@@ -51,7 +51,7 @@ public class Program
                         exclusionRad = int.Parse(exclusionRadStr);
                     
                     inputGeometry = inPath.Deserialise<InputGeometry>();
-                    var mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 50, exclusionRad);
+                    var mesh = NavMeshGenerator.GenerateNavMesh(inputGeometry, 5000, exclusionRad);
                     mesh.Save(outPath, 1);
                     System.Console.WriteLine("Triangulation saved to disk");
                     break;

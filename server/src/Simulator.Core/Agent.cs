@@ -12,15 +12,23 @@ public struct AgentSnapshot(int id, Vector2Int position, double speed, bool reac
     public readonly bool ReachedDestination = reachedDestination;
 }
 
-public class Agent(double timeStep, NavMesh navMesh, int id, int maxSpeed, Vector2Int startPos, Vector2Int target)
+public class Agent(
+    double timeStep,
+    NavMesh navMesh,
+    int id,
+    int maxSpeed,
+    Vector2Int startPos,
+    Vector2Int target,
+    (int, int) currentCell)
 {
     private List<NavMesh.Portal> _portals = navMesh.GetPortals(startPos, target);
-    
+
     public int Id = id;
-    
+    public (int, int) CurrentCell = currentCell;
+
     public int MaxSpeed = maxSpeed;
     public Vector2Int Destination = target;
-    
+
     public Vector2Int Position = startPos;
     public Vector2 Velocity = new(0, 0);
 
@@ -29,42 +37,43 @@ public class Agent(double timeStep, NavMesh navMesh, int id, int maxSpeed, Vecto
         var preferredVelocity = GetPreferredVelocity();
         return preferredVelocity;
     }
-    
+
     private Vector2 GetPreferredVelocity()
     {
         var nextTurningPoint = NavMesh.GetNextTurningPoint(Position, _portals);
 
-        if (Position == Destination) 
+        if (Position == Destination)
             return new Vector2(0, 0);
-        
+
         var directionVector = (nextTurningPoint - Position).GetNormalized();
         // If the next turning point is the destination, speed is determined by the smaller of the max speed and the
         // speed required to reach the destination on this step
         var preferredSpeed = nextTurningPoint == Destination
             ? Math.Min(MaxSpeed, (Destination - Position).GetLength() / timeStep)
             : MaxSpeed;
-        
+
         return directionVector * preferredSpeed;
     }
-    
+
     public AgentSnapshot UpdatePosition(Vector2 velocity)
     {
         // Snap to destination if agent is within 10 units (1cm)
         if ((Position - Destination).GetLength() < 10)
             return new AgentSnapshot(Id, Destination, velocity.GetLength(), true);
-        
+
         // Position delta if we weren't on a fixed grid resolution
         var positionDelta = velocity * timeStep;
-        
+
         var positionDeltaInt = positionDelta.ToVector2Int();
         // Candidate positions deltas which we could actually move by
-        List<Vector2Int> candidatePositionDeltas = [
-            positionDeltaInt + new Vector2Int(1, 1), 
-            positionDeltaInt + new Vector2Int(1, 0), 
-            positionDeltaInt + new Vector2Int(0, 1), 
+        List<Vector2Int> candidatePositionDeltas =
+        [
+            positionDeltaInt + new Vector2Int(1, 1),
+            positionDeltaInt + new Vector2Int(1, 0),
+            positionDeltaInt + new Vector2Int(0, 1),
             positionDeltaInt
         ];
-        
+
         // Discard candidates which are outside the navigable area
         List<Vector2Int> validCandidatePositionDeltas = [];
         foreach (var candidate in candidatePositionDeltas)
@@ -72,7 +81,7 @@ public class Agent(double timeStep, NavMesh navMesh, int id, int maxSpeed, Vecto
             if (navMesh.GetCurrentNode(candidate).Count == 0)
                 validCandidatePositionDeltas.Add(candidate);
         }
-        
+
         // Select the candidate which crosses the most portals
         var maximalCandidate = default(Vector2Int);
         var maximalCrossedPortals = -1;
@@ -80,16 +89,16 @@ public class Agent(double timeStep, NavMesh navMesh, int id, int maxSpeed, Vecto
         {
             var crossed = NavMesh.GetNumCrossedPortals(Position + candidate, _portals);
             if (crossed <= maximalCrossedPortals) continue;
-            
+
             maximalCandidate = candidate;
             maximalCrossedPortals = crossed;
         }
-        
+
         // Update Position and Velocity, and remove portals crossed on this step
         Position += maximalCandidate;
         Velocity = velocity;
         _portals.RemoveRange(0, maximalCrossedPortals);
-        
+
         return new AgentSnapshot(Id, Position, velocity.GetLength(), false);
     }
 }

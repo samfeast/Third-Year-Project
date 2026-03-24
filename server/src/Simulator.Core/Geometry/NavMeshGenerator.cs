@@ -6,7 +6,7 @@ namespace Simulator.Core.Geometry;
 
 public static class NavMeshGenerator
 {
-    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry, int gridResolution = 500, int exclusionRad = 225)
+    public static NavMesh GenerateNavMesh(InputGeometry inputGeometry, int gridResolution = 5000, int exclusionRad = 225)
     {
         var triangulator = new ConstrainedDelaunayTriangulator(exclusionRad);
         List<Triangle> triangles = triangulator.Triangulate(inputGeometry);
@@ -46,21 +46,16 @@ public static class NavMeshGenerator
     // Could be optimised further if grid lookups become a bottleneck
     private static void AddToGrid(NavMesh navMesh, Triangle triangle, int triangleIndex)
     {
-        var gridResolution = navMesh.Grid.CellSize;
-        
+        var grid = navMesh.Grid;
         var bbox = triangle.GetBoundingBox();
-        
-        var minCellX = bbox.MinX / gridResolution;
-        var maxCellX = bbox.MaxX / gridResolution;
-        var minCellY = bbox.MinY / gridResolution;
-        var maxCellY = bbox.MaxY / gridResolution;
 
-        for (int x = minCellX; x <= maxCellX; x++)
+        var minCell = grid.ComputeCell(bbox.MinX, bbox.MinY);
+        var maxCell = grid.ComputeCell(bbox.MaxX, bbox.MaxY);
+
+        for (int x = minCell.X; x <= maxCell.X; x++)
         {
-            for (int y = minCellY; y <= maxCellY; y++)
-            {
-                navMesh.Grid.Add(x, y, triangleIndex);
-            }
+            for (int y = minCell.Y; y <= maxCell.Y; y++)
+                grid.AddToCell(triangleIndex, (x, y));
         }
     }
 
