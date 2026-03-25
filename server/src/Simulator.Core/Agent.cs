@@ -19,12 +19,12 @@ public class Agent(
     int maxSpeed,
     Vector2Int startPos,
     Vector2Int target,
-    (int, int) currentCell)
+    (int, int) startCell)
 {
     private List<NavMesh.Portal> _portals = navMesh.GetPortals(startPos, target);
 
     public int Id = id;
-    public (int, int) CurrentCell = currentCell;
+    public (int, int) CurrentCell = startCell;
 
     public int MaxSpeed = maxSpeed;
     public Vector2Int Destination = target;
@@ -32,9 +32,12 @@ public class Agent(
     public Vector2Int Position = startPos;
     public Vector2 Velocity = new(0, 0);
 
-    public Vector2 GetVelocity(MovementConstraints constraints)
+    private const int Radius = 45;
+
+    public Vector2 GetVelocity(MovementConstraints constraints, double timeHorizon)
     {
         var preferredVelocity = GetPreferredVelocity();
+        // If there are no conflicting agents we can move at preferred velocity (this already avoids walls)
         if (constraints.ConflictingAgents.Count == 0) return preferredVelocity;
         
         // ORCA logic here

@@ -23,6 +23,8 @@ public readonly struct Vector2Int(int x, int y) : IEquatable<Vector2Int>
     public double GetLength() => Math.Sqrt(GetSquaredLength());
     public long Dot(Vector2Int other) => (long)X * other.X + (long)Y * other.Y;
     
+    public Vector2 ToVector2() => new Vector2(X, Y);
+    
     public Vector2 GetNormalized()
     {
         var magnitude = GetLength();

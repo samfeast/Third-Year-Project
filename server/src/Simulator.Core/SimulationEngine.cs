@@ -98,7 +98,7 @@ public class SimulationEngine
         {
             var agent = LiveAgents[i];
             var agentConstraints = constraints[agent.Id];
-            var velocity = agent.GetVelocity(agentConstraints);
+            var velocity = agent.GetVelocity(agentConstraints, _orcaTimeHorizon);
             agentSnapshots[i] = agent.UpdatePosition(velocity);
         }
         
