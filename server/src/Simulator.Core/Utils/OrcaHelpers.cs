@@ -20,12 +20,17 @@ public static class OrcaHelpers
         public bool IsOverlapping;
     }
 
+    public struct HalfPlane
+    {
+        public Vector2 Point;
+        public Vector2 Normal;
+    }
+
     public static VelocityObstacle GetVelocityObstacle(Vector2Int posA, int radA, Vector2Int posB, int radB, double tau)
     {
         var relPos = (posB - posA).ToVector2();
         var combinedRadius = radA + radB;
-
-        var truncationCenter = relPos / tau;
+        
         var vo = new VelocityObstacle
         {
             TruncationCentre = relPos / tau,
@@ -33,13 +38,14 @@ public static class OrcaHelpers
         };
         
         // Distance between pA and pB
-        var dist = relPos.GetLength();
-        if (dist < combinedRadius)
+        if ((posB - posA).GetSquaredLength() < combinedRadius * combinedRadius)
         {
             // Agents already overlapping, handle separately later
             vo.IsOverlapping = true;
             return vo;
         }
+        
+        var dist = relPos.GetLength();
         
         var distToIntersection = Math.Sqrt(relPos.GetSquaredLength() - combinedRadius * combinedRadius) / tau;
 
@@ -68,6 +74,10 @@ public static class OrcaHelpers
     public static (Vector2 closestPoint, Vector2 outwardNormal) GetNearestPointOnBoundary(VelocityObstacle vo,
         Vector2 relativeVelocity)
     {
+        if (vo.IsOverlapping)
+        {
+            throw new ArgumentException("Should not call GetNearestPointOnBoundary with overlapping obstacle");
+        }
         var nearestPointLeftLeg = GetNearestPointOnRay(relativeVelocity, vo.LeftLegIntersection);
         var distanceSqToLeftLeg = (nearestPointLeftLeg - relativeVelocity).GetSquaredLength();
         

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Utils;
@@ -32,7 +33,7 @@ public class Agent(
     public Vector2Int Position = startPos;
     public Vector2 Velocity = new(0, 0);
 
-    private const int Radius = 45;
+    public int Radius = 225;
 
     public Vector2 GetVelocity(MovementConstraints constraints, double timeHorizon)
     {
@@ -40,11 +41,53 @@ public class Agent(
         // If there are no conflicting agents we can move at preferred velocity (this already avoids walls)
         if (constraints.ConflictingAgents.Count == 0) return preferredVelocity;
         
-        // ORCA logic here
+        // ORCA logic
+        var halfPlanes = new List<OrcaHelpers.HalfPlane>(constraints.ConflictingAgents.Count);
+        foreach (var other in constraints.ConflictingAgents)
+        {
+            // For now set vOpt to 0
+            var vOpt = new Vector2(0, 0);
+            var vOptOther = new Vector2(0, 0);
+            
+            var vo = OrcaHelpers.GetVelocityObstacle(Position, Radius, other.Position, other.Radius, timeHorizon);
+
+            // If they're already overlappaing construct a half plane directly between their positions
+            if (vo.IsOverlapping)
+            {
+                var separation = Position - other.Position;
+                if (separation.GetSquaredLength() == 0)
+                    throw new UnreachableException("Agents should never be entirely overlapping");
+                
+                var normal = separation.GetNormalized();
+                var penetrationSpeed = (Radius + other.Radius - separation.GetLength()) / timeStep;
+                
+                halfPlanes.Add(new OrcaHelpers.HalfPlane
+                {
+                    Point = vOpt + normal * penetrationSpeed,
+                    Normal = normal,
+                });
+                continue;
+            }
+            
+            var relOptVelocity = vOpt - vOptOther;
+            
+            var (closestPoint, outwardNormal) = OrcaHelpers.GetNearestPointOnBoundary(vo, relOptVelocity);
+            var u = closestPoint - relOptVelocity;
+            
+            halfPlanes.Add(new OrcaHelpers.HalfPlane
+            {
+                Point = vOpt + u * 0.5f,
+                Normal = outwardNormal
+            });
+        }
+        
+        // TODO: Add half planes for static objects
+        // TODO: Implement linear program to solve half planes
+        
         return preferredVelocity;
     }
 
-    private Vector2 GetPreferredVelocity()
+    public Vector2 GetPreferredVelocity()
     {
         var nextTurningPoint = NavMesh.GetNextTurningPoint(Position, _portals);
 
@@ -55,10 +98,10 @@ public class Agent(
         // If the next turning point is the destination, speed is determined by the smaller of the max speed and the
         // speed required to reach the destination on this step
         var preferredSpeed = nextTurningPoint == Destination
-            ? Math.Min(MaxSpeed, (Destination - Position).GetLength() / timeStep)
+            ? Math.Min(MaxSpeed, (Destination - Position).GetLength())
             : MaxSpeed;
 
-        return directionVector * preferredSpeed;
+        return directionVector * preferredSpeed * timeStep;
     }
 
     public AgentSnapshot UpdatePosition(Vector2 velocity)
