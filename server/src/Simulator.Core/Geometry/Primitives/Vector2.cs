@@ -43,6 +43,8 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
     
     public double Dot(Vector2 other) => X * other.X + Y * other.Y;
 
+    public static double Dot(Vector2 a, Vector2 b) => a.Dot(b);
+
     public Vector2Int ToVector2Int()
     {
         return new Vector2Int((int)Math.Floor(X), (int)Math.Floor(Y));

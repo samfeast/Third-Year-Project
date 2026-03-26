@@ -145,9 +145,7 @@ public class NavMesh(int cellSize)
             if (Nodes[i].Triangle.ContainsPoint(new Vector2Int(x, y)))
                 rtn.Add(i);
         }
-        
-        if (rtn.Count > 1)
-            Console.WriteLine($"WARNING: ({x}, {y}) inside {rtn.Count} nodes");
+
         return rtn;
     }
 

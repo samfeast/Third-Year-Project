@@ -94,7 +94,7 @@ public class Program
         const float timeStep = 0.1f;
         var config = new SimulationConfig(inputGeometry, timeStep, 1, spawnSeed);
         var simulator = new SimulationEngine(config);
-                    
+        
         while (true)
         {
             var snapshot = simulator.StepSimulation();
@@ -201,6 +201,9 @@ public class Program
                 var outwardNormalRounded = outwardNormal.Round(3);
                 System.Console.WriteLine($"\tDesmos str: {outwardNormalRounded.X}x + {outwardNormalRounded.Y}y < {Math.Round(halfPlanePoint.Dot(outwardNormal),3)}");
             }
+
+            var vActual = OrcaHelpers.LinearProgram2(halfPlanes, preferredVelocity);
+            System.Console.WriteLine($"V_Actual: {vActual}");
             System.Console.WriteLine($"End of agent {agent.Id}\n");
         }
     }

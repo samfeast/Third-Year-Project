@@ -34,20 +34,21 @@ public class Agent(
     public Vector2 Velocity = new(0, 0);
 
     public int Radius = 225;
+    private bool UseOrca = false;
 
     public Vector2 GetVelocity(MovementConstraints constraints, double timeHorizon)
     {
         var preferredVelocity = GetPreferredVelocity();
         // If there are no conflicting agents we can move at preferred velocity (this already avoids walls)
-        if (constraints.ConflictingAgents.Count == 0) return preferredVelocity;
+        if (constraints.ConflictingAgents.Count == 0 || !UseOrca) return preferredVelocity;
         
         // ORCA logic
         var halfPlanes = new List<OrcaHelpers.HalfPlane>(constraints.ConflictingAgents.Count);
         foreach (var other in constraints.ConflictingAgents)
         {
             // For now set vOpt to 0
-            var vOpt = new Vector2(0, 0);
-            var vOptOther = new Vector2(0, 0);
+            var vOpt = Velocity;
+            var vOptOther = other.Velocity;
             
             var vo = OrcaHelpers.GetVelocityObstacle(Position, Radius, other.Position, other.Radius, timeHorizon);
 
@@ -80,11 +81,13 @@ public class Agent(
                 Normal = outwardNormal
             });
         }
+        var actualVelocity = OrcaHelpers.LinearProgram2(halfPlanes, preferredVelocity);
+
+        if (actualVelocity != null) return actualVelocity.Value;
         
-        // TODO: Add half planes for static objects
-        // TODO: Implement linear program to solve half planes
-        
+        Console.WriteLine($"WARNING: [{Id}] No solution, returning preferred anyway");
         return preferredVelocity;
+
     }
 
     public Vector2 GetPreferredVelocity()
@@ -98,10 +101,10 @@ public class Agent(
         // If the next turning point is the destination, speed is determined by the smaller of the max speed and the
         // speed required to reach the destination on this step
         var preferredSpeed = nextTurningPoint == Destination
-            ? Math.Min(MaxSpeed, (Destination - Position).GetLength())
+            ? Math.Min(MaxSpeed, (Destination - Position).GetLength() / timeStep)
             : MaxSpeed;
 
-        return directionVector * preferredSpeed * timeStep;
+        return directionVector * preferredSpeed;
     }
 
     public AgentSnapshot UpdatePosition(Vector2 velocity)
@@ -128,7 +131,7 @@ public class Agent(
         List<Vector2Int> validCandidatePositionDeltas = [];
         foreach (var candidate in candidatePositionDeltas)
         {
-            if (navMesh.GetCurrentNode(candidate).Count == 0)
+            if (navMesh.GetCurrentNode(Position + candidate).Count > 0)
                 validCandidatePositionDeltas.Add(candidate);
         }
 
