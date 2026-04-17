@@ -126,8 +126,11 @@ public class SimulationEngine
         {
             var agent = LiveAgents[i];
             var agentConstraints = constraints[agent.Id];
-            var velocity = agent.GetVelocity(agentConstraints, _orcaTimeHorizon);
-            agentSnapshots[i] = agent.UpdatePosition(velocity);
+            
+            var debugLogging = agent.Id == -1;
+
+            var (preferredVelocity, actualVelocity) = agent.GetVelocity(agentConstraints, _orcaTimeHorizon, debugLogging);
+            agentSnapshots[i] = agent.UpdatePosition(actualVelocity, preferredVelocity);
         }
 
         var newLiveAgents = new List<Agent>(LiveAgents.Count);
@@ -193,31 +196,6 @@ public class SimulationEngine
 
                 aConstraints.AddConflictingAgent(agentB.Position, agentB.Velocity, agentB.Radius);
                 bConstraints.AddConflictingAgent(agentA.Position, agentA.Velocity, agentA.Radius);
-            }
-        }
-
-        var wallWindowRadius = agentA.MaxSpeed * _orcaTimeHorizon;
-        var wallWindowRadiusSq = wallWindowRadius * wallWindowRadius;
-        foreach (var cell in Mesh.Grid.GetRange(agentA.Position, wallWindowRadius))
-        {
-            foreach (var nodeIndex in cell)
-            {
-                var node = Mesh.Nodes[nodeIndex];
-                foreach (var (a, b, i) in node.Triangle.GetEdges())
-                {
-                    // If the node has a neighbour over the edge it isn't a wall, so continue
-                    // Since node.Neighbours is also populated with Triangle.GetEdges(), index i will always refer to
-                    // the right edge
-                    if (node.Neighbours[i] != -1) continue;
-
-                    // Compare squared distances to avoid square root operation
-                    var distanceSq = GetSquareDistancePointToSegment(agentA.Position, a, b);
-                    if (distanceSq > wallWindowRadiusSq) continue;
-
-                    // MovementConstraints stores walls as direction agnostic EdgeKey's, so it won't be added to the
-                    // hashset if it already exists
-                    aConstraints.AddConflictingWall(a, b);
-                }
             }
         }
     }

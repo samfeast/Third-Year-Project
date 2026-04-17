@@ -12,6 +12,7 @@ public readonly struct Vector2(double x, double y) : IEquatable<Vector2>
     
     public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
     public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
+    public static Vector2 operator -(Vector2 a) => new(-a.X, -a.Y);
     public static Vector2 operator +(Vector2Int a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
     public static Vector2 operator -(Vector2Int a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
     public static Vector2 operator *(Vector2 a, double b) => new(a.X * b, a.Y * b);

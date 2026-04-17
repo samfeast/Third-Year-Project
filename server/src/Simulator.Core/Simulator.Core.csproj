@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\External\RVO2\RVO2.csproj" />
     <ProjectReference Include="..\External\Triangle.NET\src\Triangle\Triangle.csproj" />
   </ItemGroup>
 

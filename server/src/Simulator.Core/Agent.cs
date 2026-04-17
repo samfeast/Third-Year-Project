@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Utils;
+using RVO2Lib = RVO2;
 
 namespace Simulator.Core;
 
@@ -33,69 +34,60 @@ public class Agent(
     public Vector2Int Position = startPos;
     public Vector2 Velocity = new(0, 0);
 
+    private Vector2Int _lastGoodPosition = startPos;
+
     public int Radius = 225;
-    private bool UseOrca = false;
+    private bool UseOrca = true;
 
-    public Vector2 GetVelocity(MovementConstraints constraints, double timeHorizon)
+    private const double EPSILON = 0.00001;
+
+    public (Vector2 preferredVelocity, Vector2 actualVelocity) GetVelocity(MovementConstraints constraints,
+        double timeHorizon, bool debugLogging = false)
     {
-        var preferredVelocity = GetPreferredVelocity();
+        var (preferredVelocity, isFinal) = GetPreferredVelocity();
         // If there are no conflicting agents we can move at preferred velocity (this already avoids walls)
-        if (constraints.ConflictingAgents.Count == 0 || !UseOrca) return preferredVelocity;
-        
+        if (constraints.ConflictingAgents.Count == 0 || !UseOrca || isFinal)
+            return (preferredVelocity, preferredVelocity);
+
+        if (debugLogging)
+            Console.WriteLine($"[{Id}] Current Position: {Position}");
+
         // ORCA logic
-        var halfPlanes = new List<OrcaHelpers.HalfPlane>(constraints.ConflictingAgents.Count);
+        var halfPlanes = new List<RVO2Lib.Line>(constraints.ConflictingAgents.Count);
+
+        // Add half planes for conflicting agents
         foreach (var other in constraints.ConflictingAgents)
+            halfPlanes.Add(GetAgentHalfPlane(other, timeHorizon, debugLogging));
+
+        RVO2Lib.Vector2 rvo2NewVelocity;
+        RVO2Lib.Vector2 rvo2PreferredVelocity =
+            new RVO2Lib.Vector2((float)preferredVelocity.X, (float)preferredVelocity.Y);
+
+        int lineFail =
+            RVO2Lib.Solvers.LinearProgram2(halfPlanes, MaxSpeed, rvo2PreferredVelocity, false, out rvo2NewVelocity);
+
+        // Fallback if LinearProgram2 cannot be satisfied
+        if (lineFail < halfPlanes.Count)
         {
-            // For now set vOpt to 0
-            var vOpt = Velocity;
-            var vOptOther = other.Velocity;
-            
-            var vo = OrcaHelpers.GetVelocityObstacle(Position, Radius, other.Position, other.Radius, timeHorizon);
-
-            // If they're already overlappaing construct a half plane directly between their positions
-            if (vo.IsOverlapping)
-            {
-                var separation = Position - other.Position;
-                if (separation.GetSquaredLength() == 0)
-                    throw new UnreachableException("Agents should never be entirely overlapping");
-                
-                var normal = separation.GetNormalized();
-                var penetrationSpeed = (Radius + other.Radius - separation.GetLength()) / timeStep;
-                
-                halfPlanes.Add(new OrcaHelpers.HalfPlane
-                {
-                    Point = vOpt + normal * penetrationSpeed,
-                    Normal = normal,
-                });
-                continue;
-            }
-            
-            var relOptVelocity = vOpt - vOptOther;
-            
-            var (closestPoint, outwardNormal) = OrcaHelpers.GetNearestPointOnBoundary(vo, relOptVelocity);
-            var u = closestPoint - relOptVelocity;
-            
-            halfPlanes.Add(new OrcaHelpers.HalfPlane
-            {
-                Point = vOpt + u * 0.5f,
-                Normal = outwardNormal
-            });
+            RVO2Lib.Solvers.LinearProgram3(halfPlanes, 0, lineFail, MaxSpeed, ref rvo2NewVelocity);
         }
-        var actualVelocity = OrcaHelpers.LinearProgram2(halfPlanes, preferredVelocity);
 
-        if (actualVelocity != null) return actualVelocity.Value;
-        
-        Console.WriteLine($"WARNING: [{Id}] No solution, returning preferred anyway");
-        return preferredVelocity;
+        var actualVelocity = new Vector2(rvo2NewVelocity.X, rvo2NewVelocity.Y);
+        if (debugLogging)
+        {
+            Console.WriteLine($"[{Id}] Preferred V: {preferredVelocity}");
+            Console.WriteLine($"[{Id}] ORCA V: {actualVelocity}");
+        }
 
+        return (preferredVelocity, actualVelocity);
     }
 
-    public Vector2 GetPreferredVelocity()
+    public (Vector2 velocity, bool isFinal) GetPreferredVelocity()
     {
-        var nextTurningPoint = NavMesh.GetNextTurningPoint(Position, _portals);
-
         if (Position == Destination)
-            return new Vector2(0, 0);
+            return (new Vector2(0, 0), true);
+
+        var nextTurningPoint = NavMesh.GetNextTurningPoint(Position, _portals);
 
         var directionVector = (nextTurningPoint - Position).GetNormalized();
         // If the next turning point is the destination, speed is determined by the smaller of the max speed and the
@@ -104,10 +96,12 @@ public class Agent(
             ? Math.Min(MaxSpeed, (Destination - Position).GetLength() / timeStep)
             : MaxSpeed;
 
-        return directionVector * preferredSpeed;
+        var isFinal = preferredSpeed < MaxSpeed - EPSILON;
+
+        return (directionVector * preferredSpeed, isFinal);
     }
 
-    public AgentSnapshot UpdatePosition(Vector2 velocity)
+    public AgentSnapshot UpdatePosition(Vector2 velocity, Vector2 fallbackVelocity)
     {
         // Snap to destination if agent is within 10 units (1cm)
         // Use squared distance to avoid square root
@@ -135,6 +129,24 @@ public class Agent(
                 validCandidatePositionDeltas.Add(candidate);
         }
 
+        // If the proposed new positions are invalid, it means ORCA is trying to push the agent outside the navigable area
+        // In this case, let the agent move at its preferred velocity (and ignore ORCA constraints)
+        if (validCandidatePositionDeltas.Count == 0)
+        {
+            // In rare cases the preferred velocity is also not valid
+            // This only happens when the agent has crossed a portal near a corner, and is subsequently pushed back over it again. This can cause the velocity vector to point through an obstacle.
+            // When this happens, teleport the agent to _lastGoodPosition, which is the last position the agent was at where it successfully crossed a boundary.
+            // While imperfect, visually the result appears realistic.
+            if (velocity == fallbackVelocity)
+            {
+                Position = _lastGoodPosition;
+                Velocity = new Vector2(0, 0);
+                return new AgentSnapshot(Id, Position, 0, false);
+            }
+
+            return UpdatePosition(fallbackVelocity, fallbackVelocity);
+        }
+
         // Select the candidate which crosses the most portals
         var maximalCandidate = default(Vector2Int);
         var maximalCrossedPortals = -1;
@@ -150,8 +162,73 @@ public class Agent(
         // Update Position and Velocity, and remove portals crossed on this step
         Position += maximalCandidate;
         Velocity = velocity;
+
         _portals.RemoveRange(0, maximalCrossedPortals);
 
+        // If we crossed a portal, update the last good position
+        if (maximalCrossedPortals > 0)
+            _lastGoodPosition = Position;
+
         return new AgentSnapshot(Id, Position, velocity.GetLength(), false);
+    }
+
+    private RVO2Lib.Line GetAgentHalfPlane(MovementConstraints.ConflictingAgent other, double timeHorizon,
+        bool debugLogging = false)
+    {
+        var vOpt = Velocity;
+        var vOptOther = other.Velocity;
+
+        var vo = OrcaHelpers.GetVelocityObstacle(Position, Radius, other.Position, other.Radius, timeHorizon);
+
+        Vector2 point;
+        Vector2 normal;
+
+        RVO2Lib.Vector2 rvo2Point;
+        RVO2Lib.Vector2 rvo2Direction;
+
+        // If they're already overlapping construct a half plane directly between their positions
+        if (vo.IsOverlapping)
+        {
+            var separation = Position - other.Position;
+            if (separation.GetSquaredLength() == 0)
+                throw new UnreachableException("Agents should never be entirely overlapping");
+
+            var penetrationSpeed = (Radius + other.Radius - separation.GetLength()) / timeStep;
+
+            normal = separation.GetNormalized();
+            point = vOpt + normal * penetrationSpeed;
+
+            rvo2Direction = new RVO2Lib.Vector2((float)normal.Y, (float)-normal.X);
+            rvo2Point = new RVO2Lib.Vector2((float)point.X, (float)point.Y);
+
+            if (debugLogging)
+                Console.WriteLine($"[{Id}] Constrained by agent at {other.Position} -> {normal.Round(3).X}x + {normal.Round(3).Y}y < {Math.Round(point.Dot(normal),3)}");
+
+            return new RVO2Lib.Line
+            {
+                Point = rvo2Point,
+                Direction = rvo2Direction
+            };
+        }
+
+        var relOptVelocity = vOpt - vOptOther;
+
+        var (closestPoint, outwardNormal) = OrcaHelpers.GetNearestPointOnBoundary(vo, relOptVelocity);
+        var u = closestPoint - relOptVelocity;
+
+        normal = outwardNormal;
+        point = vOpt + u * 0.5f;
+
+        rvo2Direction = new RVO2Lib.Vector2((float)normal.Y, (float)-normal.X);
+        rvo2Point = new RVO2Lib.Vector2((float)point.X, (float)point.Y);
+        
+        if (debugLogging)
+            Console.WriteLine($"[{Id}] Constrained by agent at {other.Position} -> {normal.Round(3).X}x + {normal.Round(3).Y}y < {Math.Round(point.Dot(normal),3)}");
+
+        return new RVO2Lib.Line
+        {
+            Point = rvo2Point,
+            Direction = rvo2Direction
+        };
     }
 }
