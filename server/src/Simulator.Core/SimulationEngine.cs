@@ -14,7 +14,7 @@ public class SimulationEngine
     public double TimeStep;
 
     private int _globalMaxSpeed = 1750; // Would require a random sample of 0.9999, so only clamp in 1/10000 cases
-    private double _orcaTimeHorizon = 3f;
+    private double _orcaTimeHorizon = 2f;
     private int _maxAgentId = -1;
     
     public List<Agent> LiveAgents;

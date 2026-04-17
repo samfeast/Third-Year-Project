@@ -36,6 +36,8 @@ public class Agent(
 
     private Vector2Int _lastGoodPosition = startPos;
 
+    private int _fails;
+
     public int Radius = 225;
     private bool UseOrca = true;
 
@@ -113,38 +115,34 @@ public class Agent(
 
         var positionDeltaInt = positionDelta.ToVector2Int();
         // Candidate positions deltas which we could actually move by
-        List<Vector2Int> candidatePositionDeltas =
-        [
-            positionDeltaInt + new Vector2Int(1, 1),
-            positionDeltaInt + new Vector2Int(1, 0),
-            positionDeltaInt + new Vector2Int(0, 1),
-            positionDeltaInt
-        ];
-
-        // Discard candidates which are outside the navigable area
-        List<Vector2Int> validCandidatePositionDeltas = [];
-        foreach (var candidate in candidatePositionDeltas)
-        {
-            if (navMesh.GetCurrentNode(Position + candidate).Count > 0)
-                validCandidatePositionDeltas.Add(candidate);
-        }
+        
+        var validCandidatePositionDeltas = GetValidCandidatePositionDeltas(positionDeltaInt);
 
         // If the proposed new positions are invalid, it means ORCA is trying to push the agent outside the navigable area
         // In this case, let the agent move at its preferred velocity (and ignore ORCA constraints)
         if (validCandidatePositionDeltas.Count == 0)
         {
-            // In rare cases the preferred velocity is also not valid
+            if (velocity != fallbackVelocity)
+                return UpdatePosition(fallbackVelocity, fallbackVelocity);
+            
+            // In rare cases the preferred velocity may also be invalid.
             // This only happens when the agent has crossed a portal near a corner, and is subsequently pushed back over it again. This can cause the velocity vector to point through an obstacle.
             // When this happens, teleport the agent to _lastGoodPosition, which is the last position the agent was at where it successfully crossed a boundary.
             // While imperfect, visually the result appears realistic.
-            if (velocity == fallbackVelocity)
+            if (velocity == fallbackVelocity && _fails < 20)
             {
+                _fails++;
                 Position = _lastGoodPosition;
                 Velocity = new Vector2(0, 0);
                 return new AgentSnapshot(Id, Position, 0, false);
             }
-
-            return UpdatePosition(fallbackVelocity, fallbackVelocity);
+            
+            // Last resort fallback - if the agent has been stuck for more than 2 seconds (20 steps), move it to the next portal
+            var toPortalLeft = _portals[0].Left - Position;
+            var toPortalRight = _portals[0].Right - Position;
+            validCandidatePositionDeltas.Add(toPortalLeft.GetSquaredLength() < toPortalRight.GetSquaredLength()
+                ? toPortalLeft
+                : toPortalRight);
         }
 
         // Select the candidate which crosses the most portals
@@ -169,7 +167,30 @@ public class Agent(
         if (maximalCrossedPortals > 0)
             _lastGoodPosition = Position;
 
+        _fails = 0;
+
         return new AgentSnapshot(Id, Position, velocity.GetLength(), false);
+    }
+
+    private List<Vector2Int> GetValidCandidatePositionDeltas(Vector2Int positionDelta)
+    {
+        List<Vector2Int> candidatePositionDeltas =
+        [
+            positionDelta + new Vector2Int(1, 1),
+            positionDelta + new Vector2Int(1, 0),
+            positionDelta + new Vector2Int(0, 1),
+            positionDelta
+        ];
+
+        // Discard candidates which are outside the navigable area
+        List<Vector2Int> validCandidatePositionDeltas = [];
+        foreach (var candidate in candidatePositionDeltas)
+        {
+            if (navMesh.GetCurrentNode(Position + candidate).Count > 0)
+                validCandidatePositionDeltas.Add(candidate);
+        }
+        
+        return validCandidatePositionDeltas;
     }
 
     private RVO2Lib.Line GetAgentHalfPlane(MovementConstraints.ConflictingAgent other, double timeHorizon,
