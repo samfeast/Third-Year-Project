@@ -2,10 +2,13 @@ import { Graphics } from "pixi.js";
 import { extend } from "@pixi/react";
 
 import type { Layout } from "../../features/layout/types";
+import { useStore } from "../../store/StoreProvider";
 
 extend({ Graphics });
 
 export default function DrawLayout({ layout }: { layout: Layout }) {
+  const { state, dispatch } = useStore();
+
   return (
     <pixiGraphics
       draw={(g) => {
@@ -37,7 +40,7 @@ export default function DrawLayout({ layout }: { layout: Layout }) {
 
         // Exits
         layout.exits.forEach(([x, y]) => {
-          g.circle(x, y, 675);
+          g.circle(x, y, state.config.exitRadius);
           g.fill({ color: "#43b581" });
         });
       }}

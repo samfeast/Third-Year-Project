@@ -17,8 +17,10 @@ public struct AgentSnapshot(int id, Vector2Int position, double speed, bool reac
 public class Agent(
     double timeStep,
     NavMesh navMesh,
+    int exitRadius,
     int id,
     int maxSpeed,
+    int radius,
     Vector2Int startPos,
     Vector2Int target,
     (int, int) startCell)
@@ -35,10 +37,11 @@ public class Agent(
     public Vector2 Velocity = new(0, 0);
 
     private Vector2Int _lastGoodPosition = startPos;
+    private int _exitRadius = exitRadius;
 
     private int _fails;
 
-    public int Radius = 225;
+    public readonly int Radius = radius;
     private bool UseOrca = true;
 
     private const double EPSILON = 0.00001;
@@ -108,9 +111,9 @@ public class Agent(
 
     public AgentSnapshot UpdatePosition(Vector2 velocity, Vector2 fallbackVelocity)
     {
-        // Snap to destination if agent is within 675 units (67.5cm)
+        // Snap to destination within the exit radius
         // Use squared distance to avoid square root
-        if ((Position - Destination).GetSquaredLength() < 455_625)
+        if ((Position - Destination).GetSquaredLength() < _exitRadius * _exitRadius)
             return new AgentSnapshot(Id, Destination, velocity.GetLength(), true);
 
         // Position delta if we weren't on a fixed grid resolution

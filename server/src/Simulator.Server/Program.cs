@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using Simulator.Core.Geometry.Primitives;
 using Simulator.Core.Geometry.Utils;
 using Simulator.Core.Utils;
 using Simulator.IO;
@@ -21,14 +22,12 @@ public class Program
 {
     private const double TARGET_BUFFER_DURATION = 5.0f;
     private const double TIME_STEP = 0.1f;
+
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
-        builder.WebHost.ConfigureKestrel(options =>
-        {
-            options.ListenAnyIP(5678);
-        });
+
+        builder.WebHost.ConfigureKestrel(options => { options.ListenAnyIP(5678); });
 
         ConfigureServices(builder.Services);
 
@@ -64,7 +63,7 @@ public class Program
             }
 
             var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            
+
             Console.WriteLine("New websocket connection established");
 
             var buffer = new byte[1024];
@@ -80,11 +79,11 @@ public class Program
                 {
                     var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     var message = JsonSerializer.Deserialize<ClientMessage>(messageJson);
-                    
+
                     if (message == null) continue;
 
                     var clientId = Guid.Parse(message.clientId);
-                    
+
                     Console.WriteLine($"Received message from client {clientId}: {messageJson}");
 
                     switch (message.command)
@@ -93,23 +92,25 @@ public class Program
                             var createPayload = message.payload.Deserialize<CreatePayload>();
                             if (createPayload == null)
                                 throw new Exception("Missing payload in create command");
-                            
+
                             HandleCreate(manager, clientId, createPayload);
                             break;
                         case "get-snapshots":
                             var getSnapshotsPayload = message.payload.Deserialize<GetSnapshotsPayload>();
                             if (getSnapshotsPayload == null)
                                 throw new Exception("Missing payload in get-snapshots command");
-                            
+
                             var bytes = HandleGetSnapshots(manager, clientId, getSnapshotsPayload);
                             if (bytes.Length > 0)
-                                await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, context.RequestAborted);
-                            
+                                await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true,
+                                    context.RequestAborted);
+
                             break;
                         case "get-heatmap":
                             var heatMapBytes = HandleGetHeatMap(manager, clientId);
                             if (heatMapBytes.Length > 0)
-                                await webSocket.SendAsync(heatMapBytes, WebSocketMessageType.Text, true, context.RequestAborted);
+                                await webSocket.SendAsync(heatMapBytes, WebSocketMessageType.Text, true,
+                                    context.RequestAborted);
 
                             break;
                         default:
@@ -118,6 +119,7 @@ public class Program
                     }
                 }
             }
+
             Console.WriteLine("Client disconnected");
         });
     }
@@ -127,23 +129,34 @@ public class Program
         // Load json layout into InputGeometry object
         var geometry = data.layout.Deserialise<InputGeometry>();
 
-        // Area is in mm^2 but agent density is in agents per m^2, so divide by 1000^2
-        var numAgents = (int)(geometry.Area * data.agentDensity / 1_000_000);
-                        
-        var config = new SimulationConfig {
-            Geometry = geometry,
-            TimeStep = TIME_STEP,
-            NumAgents = numAgents,
-            Seed = data.seed,
-        };
-                        
+        SimulationConfig config;
+        if (data.agentStartPositions.Count == 0)
+        {
+            // Area is in mm^2 but agent density is in agents per m^2, so divide by 1000^2
+            var numAgents = (int)(geometry.Area * data.agentDensity / 1_000_000);
+
+            config = new SimulationConfig(geometry, TIME_STEP, numAgents, data.agentRadius, data.speedShape,
+                data.speedScale, data.exitRadius, [], data.seed);
+        }
+        else
+        {
+            List<Vector2Int> startPoints = [];
+            foreach (var point in data.agentStartPositions)
+            {
+                startPoints.Add(new Vector2Int(point[0], point[1]));
+            }
+
+            config = new SimulationConfig(geometry, TIME_STEP, startPoints.Count, data.agentRadius, data.speedShape,
+                data.speedScale, data.exitRadius, startPoints, data.seed);
+        }
+
         manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
     }
 
     private static byte[] HandleGetSnapshots(SimulationManager manager, Guid clientId, GetSnapshotsPayload data)
     {
         // Calculate buffer size capped at 200 steps
-        var targetBufferSize = (int) Math.Round(data.playbackSpeed * TARGET_BUFFER_DURATION / TIME_STEP);
+        var targetBufferSize = (int)Math.Round(data.playbackSpeed * TARGET_BUFFER_DURATION / TIME_STEP);
         // Work out number of steps needed to fill buffer
         var numSteps = Math.Min(targetBufferSize, 200) - (data.lastBufferedStep - data.lastDisplayedStep);
 
@@ -154,12 +167,12 @@ public class Program
         var simulator = manager.TryGetSimulator(clientId);
         if (simulator == null)
             return [];
-        
+
         var snapshots = simulator.GetSnapshots(Math.Max(data.lastBufferedStep, 0), numSteps);
 
         if (snapshots.Count == 0)
             return [];
-        
+
         return snapshots.Serialise(DataFormat.JSON, 2);
     }
 
@@ -171,8 +184,7 @@ public class Program
 
         var heatMap = simulator.Engine.Results.HeatMap;
         if (heatMap.Count == 0) return [];
-        
+
         return heatMap.Serialise(DataFormat.JSON, 1);
     }
 }
-

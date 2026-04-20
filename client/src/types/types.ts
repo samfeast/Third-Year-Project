@@ -8,6 +8,7 @@ export type Config = {
   agentRadius: number;
   speedShape: number;
   speedScale: number;
+  exitRadius: number;
   layout: Layout;
 };
 
@@ -20,5 +21,6 @@ export const defaultConfig: Config = {
   agentRadius: 225,
   speedShape: 10.14,
   speedScale: 1.41,
+  exitRadius: 675,
   layout: emptyLayout,
 };

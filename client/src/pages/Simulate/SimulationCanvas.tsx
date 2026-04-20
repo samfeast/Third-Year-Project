@@ -37,7 +37,10 @@ export default function SimulationCanvas() {
         <DrawLayout layout={layout} />
 
         {snapshot && !snapshot.final && (
-          <DrawSnapshot snapshot={snapshot} agentRadius={225} />
+          <DrawSnapshot
+            snapshot={snapshot}
+            agentRadius={state.config.agentRadius}
+          />
         )}
       </container>
     </Application>

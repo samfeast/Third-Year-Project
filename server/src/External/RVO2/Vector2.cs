@@ -79,7 +79,7 @@ namespace RVO2
         /// <returns>True if this vector equals the specified object.</returns>
         ///
         /// <param name="obj">The object to compare with this vector.</param>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Vector2 other && Equals(other);
         }

@@ -23,6 +23,9 @@ export default function ConfigurePage() {
   const [agentSpeedScalePosition, setAgentSpeedScalePosition] = useState(
     agentSpeedScaleToPosition(state.config.speedScale),
   );
+  const [exitRadiusPosition, setExitRadiusPosition] = useState(
+    exitRadiusToPosition(state.config.exitRadius),
+  );
 
   const [customPositionsChecked, setCustomPositionsChecked] = useState(
     state.config.agentStartPositions.length > 0,
@@ -64,6 +67,7 @@ export default function ConfigurePage() {
           seed: seed,
           speedShape: state.config.speedShape,
           speedScale: state.config.speedScale,
+          exitRadius: state.config.exitRadius,
           layout: state.config.layout,
         },
       });
@@ -84,6 +88,7 @@ export default function ConfigurePage() {
         seed: state.config.seed,
         speedShape: state.config.speedShape,
         speedScale: state.config.speedScale,
+        exitRadius: state.config.exitRadius,
         layout: state.config.layout,
       },
     });
@@ -115,13 +120,14 @@ export default function ConfigurePage() {
         seed: state.config.seed,
         speedShape: state.config.speedShape,
         speedScale: state.config.speedScale,
+        exitRadius: state.config.exitRadius,
         layout: state.config.layout,
       },
     });
   }
 
   function positionToAgentDensity(position: number) {
-    return Math.round((0.19 * position + 0.01) * 100) / 100;
+    return Math.round((0.19 * position + 0.01) * 1000) / 1000;
   }
 
   function agentDensityToPosition(density: number) {
@@ -129,7 +135,7 @@ export default function ConfigurePage() {
   }
 
   function formatAgentDensity(position: number) {
-    return positionToAgentDensity(position) + " per m2";
+    return positionToAgentDensity(position) + " per m²";
   }
 
   function handleAgentSpeedShapeChange(newPosition: number) {
@@ -146,6 +152,7 @@ export default function ConfigurePage() {
         seed: state.config.seed,
         speedShape: agentSpeedShape,
         speedScale: state.config.speedScale,
+        exitRadius: state.config.exitRadius,
         layout: state.config.layout,
       },
     });
@@ -177,6 +184,7 @@ export default function ConfigurePage() {
         seed: state.config.seed,
         speedShape: state.config.speedShape,
         speedScale: agentSpeedScale,
+        exitRadius: state.config.exitRadius,
         layout: state.config.layout,
       },
     });
@@ -192,6 +200,38 @@ export default function ConfigurePage() {
 
   function formatAgentSpeedScale(position: number) {
     return positionToAgentSpeedScale(position).toString();
+  }
+
+  function handleExitRadiusChange(newPosition: number) {
+    if (exitRadiusPosition === newPosition) return;
+    setExitRadiusPosition(newPosition);
+    const exitRadius = positionToExitRadius(newPosition);
+
+    dispatch({
+      type: "SET_CONFIG",
+      payload: {
+        agentDensity: state.config.agentDensity,
+        agentStartPositions: state.config.agentStartPositions,
+        agentRadius: state.config.agentRadius,
+        seed: state.config.seed,
+        speedShape: state.config.speedShape,
+        speedScale: state.config.speedScale,
+        exitRadius: exitRadius,
+        layout: state.config.layout,
+      },
+    });
+  }
+
+  function positionToExitRadius(position: number) {
+    return Math.round((1000 * position + 200) / 5) * 5;
+  }
+
+  function exitRadiusToPosition(exitRadius: number) {
+    return (exitRadius - 200) / 1000;
+  }
+
+  function formatExitRadius(position: number) {
+    return positionToExitRadius(position) + "mm";
   }
 
   const handleCsvUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,6 +262,7 @@ export default function ConfigurePage() {
           seed: state.config.seed,
           speedShape: state.config.speedShape,
           speedScale: state.config.speedScale,
+          exitRadius: state.config.exitRadius,
           layout: state.config.layout,
         },
       });
@@ -339,7 +380,32 @@ export default function ConfigurePage() {
             </div>
 
             <div className={styles["input-group"]}>
-              <label>Start Positions</label>
+              <label>Exit Radius: {state.config.exitRadius}</label>
+              <div className={styles["slider-container"]}>
+                <Slider
+                  position={exitRadiusPosition}
+                  width={12}
+                  length={450}
+                  orientation={"horizontal"}
+                  onChangeCommitted={handleExitRadiusChange}
+                  formatPosition={formatExitRadius}
+                  styles={{
+                    trackBorderRadius: 12,
+                    trackColour: "#464C5A",
+                    tooltipOffset: 8,
+                    tooltipFontSize: 14,
+                    fillColour: "#5865f2",
+                    handleWidth: 18,
+                    handleLength: 18,
+                    handleBorderRadius: 16,
+                    handleColour: "#eee",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className={styles["input-group"]}>
+              <label>Starting Positions</label>
               <ToggleSwitch
                 leftLabel={"Random"}
                 rightLabel={"Custom"}
@@ -370,7 +436,7 @@ export default function ConfigurePage() {
                       </div>
                     ) : (
                       <p>
-                        Upload <strong>CSV</strong> Start Positions
+                        Upload <strong>CSV</strong> Starting Positions
                       </p>
                     )}
                   </div>
@@ -432,6 +498,10 @@ export default function ConfigurePage() {
                     : `${state.config.agentDensity} per m²`}
                 </strong>
               </li>
+              <li>
+                <span>Exit Radius:</span>
+                <strong>{state.config.exitRadius}mm</strong>
+              </li>
             </ul>
 
             <ul className={styles["summary-list"]}>
@@ -441,7 +511,7 @@ export default function ConfigurePage() {
                 <strong>{state.config.agentRadius}mm</strong>
               </li>
               <li>
-                <span>Start Position:</span>
+                <span>Starting Positions:</span>
                 <strong>{customPositionsChecked ? "Custom" : "Random"}</strong>
               </li>
             </ul>

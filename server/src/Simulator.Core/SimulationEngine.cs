@@ -16,6 +16,11 @@ public class SimulationEngine
     private int _globalMaxSpeed = 1750; // Would require a random sample of 0.9999, so only clamp in 1/10000 cases
     private double _orcaTimeHorizon = 2f;
     private int _maxAgentId = 0;
+
+    private double _speedShape;
+    private double _speedScale;
+    private int _agentRadius;
+    private int _exitRadius;
     
     public ResultsCollector Results = new();
     
@@ -24,27 +29,40 @@ public class SimulationEngine
 
     public SimulationEngine(SimulationConfig config)
     {
+        Console.WriteLine($"Initialising simulation with {config.NumAgents} agents, seed {config.Seed}, radius {config.AgentRadius}");
         TimeStep = config.TimeStep;
         // Initialise RNG with random seed if one isn't provided
         _rng = config.Seed == null ? new Random() : new Random(config.Seed.Value);
+        _speedShape = config.SpeedShape;
+        _speedScale = config.SpeedScale;
+        _agentRadius = config.AgentRadius;
+        _exitRadius = config.ExitRadius;
 
         Mesh = NavMeshGenerator.GenerateNavMesh(config.Geometry);
         LiveAgents = new List<Agent>(config.NumAgents);
 
-        // Generate random start and end points for all numAgents
+        // Generate enough start and end points for start and end positions of all agents
         var points = GenerateRandomPoints(2 * config.NumAgents);
-        var startPoints = points.Take(config.NumAgents).ToArray();
+        
+        Vector2Int[] startPoints;
+        if (config.StartPoints.Count == config.NumAgents)
+            startPoints = config.StartPoints.ToArray();
+        else
+            startPoints = points.Take(config.NumAgents).ToArray();
         
         if (config.Geometry.Exits.Count == 0)
         {
+            // If there are no exits, generate random targets
             var endPoints = points.Skip(config.NumAgents).ToArray();
             CreateAgents(startPoints, endPoints);
         } else if (config.Geometry.Exits.Count == 1)
         {
+            // If there is exactly one exit, navigate to that
             CreateAgents(startPoints, config.Geometry.Exits[0]);
         }
         else
         {
+            // If there are multiple exits, navigate to the nearest one
             for (int i = 0; i < config.NumAgents; i++)
             {
                 var bestExit = GetBestExit(startPoints[i], config.Geometry.Exits);
@@ -69,7 +87,7 @@ public class SimulationEngine
     {
         var speed = GenerateRandomSpeed();
         var cell = AgentGrid.ComputeCell(startPoint);
-        var agent = new Agent(TimeStep, Mesh, _maxAgentId + 1, speed, startPoint, endPoint, cell);
+        var agent = new Agent(TimeStep, Mesh, _exitRadius, _maxAgentId + 1, speed, _agentRadius, startPoint, endPoint, cell);
 
         LiveAgents.Add(agent);
         AgentGrid.AddToCell(agent, cell);
@@ -109,7 +127,7 @@ public class SimulationEngine
     private int GenerateRandomSpeed()
     {
         // Shape and scale parameters taken from Poulos et al.
-        var sampledSpeed = StatisticalDistributions.SampleWeibull(_rng, 10.14, 1.41) * 1000;
+        var sampledSpeed = StatisticalDistributions.SampleWeibull(_rng, _speedShape, _speedScale) * 1000;
         // Clamp to _globalMaxSpeed
         return Math.Min((int)Math.Round(sampledSpeed), _globalMaxSpeed);
     }

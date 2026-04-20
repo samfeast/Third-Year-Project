@@ -15,7 +15,7 @@ public class SimulationController(SimulationManager manager) : ControllerBase
         var id = Guid.NewGuid();
 
         manager.EnqueueCommand(
-            new CreateSimulationCommand(id, new SimulationConfig(), 0)
+            new CreateSimulationCommand(id, SimulationConfig.Empty(), 0)
         );
 
         return Ok(id);

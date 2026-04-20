@@ -32,9 +32,6 @@ export default function CreatePage() {
     state.config.layout === emptyLayout ? null : state.config.layout,
   );
 
-  const exampleImageUrl =
-    "https://media.istockphoto.com/id/1316134499/photo/a-concept-image-of-a-magnifying-glass-on-blue-background-with-a-word-example-zoom-inside-the.jpg?s=612x612&w=0&k=20&c=sZM5HlZvHFYnzjrhaStRpex43URlxg6wwJXff3BE9VA=";
-
   function handlePresetSelect(name: string) {
     let layout: Layout;
     switch (name) {
