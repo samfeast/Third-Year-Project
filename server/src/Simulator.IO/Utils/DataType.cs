@@ -5,5 +5,6 @@ public enum DataType
     Geometry,
     Mesh,
     SimulationSnapshots,
-    SimulationSnapshot
+    SimulationSnapshot,
+    HeatMap
 }

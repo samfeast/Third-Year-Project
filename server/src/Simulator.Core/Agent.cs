@@ -74,6 +74,9 @@ public class Agent(
             RVO2Lib.Solvers.LinearProgram3(halfPlanes, 0, lineFail, MaxSpeed, ref rvo2NewVelocity);
         }
 
+        if (rvo2NewVelocity.X is float.NaN || rvo2NewVelocity.Y is float.NaN)
+            rvo2NewVelocity = new RVO2Lib.Vector2(0, 0);
+
         var actualVelocity = new Vector2(rvo2NewVelocity.X, rvo2NewVelocity.Y);
         if (debugLogging)
         {
@@ -105,9 +108,9 @@ public class Agent(
 
     public AgentSnapshot UpdatePosition(Vector2 velocity, Vector2 fallbackVelocity)
     {
-        // Snap to destination if agent is within 10 units (1cm)
+        // Snap to destination if agent is within 675 units (67.5cm)
         // Use squared distance to avoid square root
-        if ((Position - Destination).GetSquaredLength() < 100)
+        if ((Position - Destination).GetSquaredLength() < 455_625)
             return new AgentSnapshot(Id, Destination, velocity.GetLength(), true);
 
         // Position delta if we weren't on a fixed grid resolution

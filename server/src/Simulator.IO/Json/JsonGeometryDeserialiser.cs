@@ -46,7 +46,8 @@ internal class JsonGeometryDeserialiser : IDeserialiser<InputGeometry>
      *       [[x3,y3],[x4,y4],...],
      *       [[x5,y5],[x6,y6],...],
      *       ...
-     *    ]
+     *    ],
+     *    "exits": [[x7,y7],[x8,y8],...]
      * }
      */
     private InputGeometry DeserialiseV1(JsonElement root)
@@ -69,6 +70,12 @@ internal class JsonGeometryDeserialiser : IDeserialiser<InputGeometry>
             negatives.Add(new Polygon(negativeVertices));
         }
         
-        return new InputGeometry(positive, negatives);
+        List<Vector2Int> exits = [];
+        foreach (var exit in root.GetProperty("exits").EnumerateArray())
+        {
+            exits.Add(new Vector2Int(exit[0].GetInt32(), exit[1].GetInt32()));;
+        }
+        
+        return new InputGeometry(positive, negatives, exits);
     }
 }

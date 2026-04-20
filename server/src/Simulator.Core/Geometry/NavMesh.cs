@@ -22,6 +22,7 @@ public class NavMesh(int cellSize)
     }
 
     public readonly List<Node> Nodes = [];
+    public readonly List<long> HeatMap = [];
     public readonly UniformGrid<int> Grid = new(cellSize);
     public readonly List<long> CumulativeDoubleAreas = [];
 
@@ -41,7 +42,7 @@ public class NavMesh(int cellSize)
         return portals;
     }
 
-    public static List<Vector2Int> GetFullFunnelPath(Vector2Int position, List<Portal> portals)
+    public List<Vector2Int> GetFullFunnelPath(Vector2Int position, List<Portal> portals)
     {
         List<Vector2Int> path = [position];
         // Portals should never end up empty, could be while (true) but this acts as a guard

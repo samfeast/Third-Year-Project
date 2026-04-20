@@ -15,7 +15,9 @@ public class SimulationEngine
 
     private int _globalMaxSpeed = 1750; // Would require a random sample of 0.9999, so only clamp in 1/10000 cases
     private double _orcaTimeHorizon = 2f;
-    private int _maxAgentId = -1;
+    private int _maxAgentId = 0;
+    
+    public ResultsCollector Results = new();
     
     public List<Agent> LiveAgents;
     public UniformGrid<Agent> AgentGrid = new(1500);
@@ -32,48 +34,76 @@ public class SimulationEngine
         // Generate random start and end points for all numAgents
         var points = GenerateRandomPoints(2 * config.NumAgents);
         var startPoints = points.Take(config.NumAgents).ToArray();
-        var endPoints = points.Skip(config.NumAgents).ToArray();
-
-        // Create the agents at the start positions on step 0
-        CreateAgents(startPoints, endPoints);
+        
+        if (config.Geometry.Exits.Count == 0)
+        {
+            var endPoints = points.Skip(config.NumAgents).ToArray();
+            CreateAgents(startPoints, endPoints);
+        } else if (config.Geometry.Exits.Count == 1)
+        {
+            CreateAgents(startPoints, config.Geometry.Exits[0]);
+        }
+        else
+        {
+            for (int i = 0; i < config.NumAgents; i++)
+            {
+                var bestExit = GetBestExit(startPoints[i], config.Geometry.Exits);
+                CreateAgent(startPoints[i], bestExit);
+            }
+        }
     }
 
     private void CreateAgents(Vector2Int[] startPoints, Vector2Int[] endPoints)
     {
         for (int i = 0; i < startPoints.Length; i++)
-        {
-            var speed = GenerateRandomSpeed();
-            var cell = AgentGrid.ComputeCell(startPoints[i]);
-            var agent = new Agent(TimeStep, Mesh, i, speed, startPoints[i], endPoints[i], cell);
-
-            LiveAgents.Add(agent);
-            AgentGrid.AddToCell(agent, cell);
-        }
-
-        _maxAgentId = startPoints.Length - 1;
+            CreateAgent(startPoints[i], endPoints[i]);
     }
 
-    public void AddAgent(int? maxSpeed, Vector2Int? startPoint, Vector2Int? target)
+    private void CreateAgents(Vector2Int[] startPoints, Vector2Int endPoint)
     {
-        startPoint ??= GeneratePoint();
-        target ??= GeneratePoint();
+        foreach (var startPoint in startPoints)
+            CreateAgent(startPoint, endPoint);
+    }
 
-        maxSpeed ??= GenerateRandomSpeed();
-        maxSpeed = Math.Min(maxSpeed.Value, _globalMaxSpeed);
-
-        if (Mesh.GetCurrentNode(startPoint.Value).Count == 0)
-            throw new ArgumentException("Start point is outside mesh");
-        if (Mesh.GetCurrentNode(target.Value).Count == 0)
-            throw new ArgumentException("Target is outside mesh");
-
-
-        var cell = AgentGrid.ComputeCell(startPoint.Value);
-        var agent = new Agent(TimeStep, Mesh, _maxAgentId + 1, maxSpeed.Value, startPoint.Value, target.Value, cell);
+    private void CreateAgent(Vector2Int startPoint, Vector2Int endPoint)
+    {
+        var speed = GenerateRandomSpeed();
+        var cell = AgentGrid.ComputeCell(startPoint);
+        var agent = new Agent(TimeStep, Mesh, _maxAgentId + 1, speed, startPoint, endPoint, cell);
 
         LiveAgents.Add(agent);
         AgentGrid.AddToCell(agent, cell);
 
         _maxAgentId++;
+    }
+
+    private Vector2Int GetBestExit(Vector2Int startPoint, List<Vector2Int> exits)
+    {
+        var bestExit = exits[0];
+        var distanceToBestExit = double.PositiveInfinity;
+
+        foreach (var exit in exits)
+        {
+            var portals = Mesh.GetPortals(startPoint, exit);
+            var path = Mesh.GetFullFunnelPath(startPoint, portals);
+                    
+            double distance = 0;
+
+            for (int j = 1; j < path.Count; j++)
+            {
+                var a = path[j - 1];
+                var b = path[j];
+
+                distance += (a - b).GetLength();
+            }
+
+            if (!(distance < distanceToBestExit)) continue;
+            
+            distanceToBestExit = distance;
+            bestExit = exit;
+        }
+        
+        return bestExit;
     }
 
     private int GenerateRandomSpeed()
@@ -131,6 +161,10 @@ public class SimulationEngine
 
             var (preferredVelocity, actualVelocity) = agent.GetVelocity(agentConstraints, _orcaTimeHorizon, debugLogging);
             agentSnapshots[i] = agent.UpdatePosition(actualVelocity, preferredVelocity);
+            
+            var currentNodes = Mesh.GetCurrentNode(agent.Position);
+            foreach (var nodeIndex in currentNodes)
+                Mesh.HeatMap[nodeIndex] += 1;
         }
 
         var newLiveAgents = new List<Agent>(LiveAgents.Count);
@@ -157,17 +191,22 @@ public class SimulationEngine
             }
             else
             {
-                // If the agent has reached its destination remove it from AgentGrid
+                // If the agent has reached its destination remove it from AgentGrid and collect results
                 AgentGrid.RemoveFromCell(agent, agent.CurrentCell);
+                Results.Evacuationtimes.Add(Step);
             }
         }
 
-        snapshot.AllComplete = allComplete;
+        // Force simulation to terminate after 1 hour
+        snapshot.AllComplete = allComplete || Step > 36000;
         snapshot.Step = Step;
 
         Step++;
         LiveAgents.Clear();
         LiveAgents.AddRange(newLiveAgents);
+        
+        if (allComplete)
+            GenerateHeatmap();
 
         return snapshot;
     }
@@ -210,23 +249,20 @@ public class SimulationEngine
         return agentConstraints;
     }
 
-    // Get the minimum distance between point and line segment ab
-    private static double GetSquareDistancePointToSegment(Vector2Int point, Vector2Int a, Vector2Int b)
+    private void GenerateHeatmap()
     {
-        var ab = b - a;
-        var ap = point - a;
+        double maxDensity = -1;
+        for (int i = 0; i < Mesh.Nodes.Count; i++)
+        {
+            var density = (double)Mesh.HeatMap[i] / Mesh.Nodes[i].DoubleArea;
+            if (density > maxDensity)
+                maxDensity = density;
+        }
 
-        var t = (double)ap.Dot(ab) / ab.GetSquaredLength();
-        // Clamp to [0,1]
-        t = Math.Max(0, Math.Min(1, t));
-
-        // Closest point on segment
-        var closestPoint = new Vector2(
-            a.X + t * ab.X,
-            a.Y + t * ab.Y
-        );
-
-        var differenceVector = point - closestPoint;
-        return differenceVector.GetSquaredLength();
+        for (int i = 0; i < Mesh.Nodes.Count; i++)
+        {
+            var density = (double)Mesh.HeatMap[i] / Mesh.Nodes[i].DoubleArea / maxDensity;
+            Results.HeatMap.Add(new ResultsCollector.HeatMapCell(Mesh.Nodes[i].Triangle, density));
+        }
     }
 }

@@ -24,6 +24,11 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(5678);
+        });
 
         ConfigureServices(builder.Services);
 
@@ -101,6 +106,12 @@ public class Program
                                 await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, context.RequestAborted);
                             
                             break;
+                        case "get-heatmap":
+                            var heatMapBytes = HandleGetHeatMap(manager, clientId);
+                            if (heatMapBytes.Length > 0)
+                                await webSocket.SendAsync(heatMapBytes, WebSocketMessageType.Text, true, context.RequestAborted);
+
+                            break;
                         default:
                             Console.WriteLine($"Unknown command received: {message.command}");
                             break;
@@ -123,7 +134,7 @@ public class Program
             Geometry = geometry,
             TimeStep = TIME_STEP,
             NumAgents = numAgents,
-            Seed = 100,
+            Seed = data.seed,
         };
                         
         manager.EnqueueCommand(new CreateSimulationCommand(clientId, config, 0));
@@ -150,6 +161,18 @@ public class Program
             return [];
         
         return snapshots.Serialise(DataFormat.JSON, 2);
+    }
+
+    private static byte[] HandleGetHeatMap(SimulationManager manager, Guid clientId)
+    {
+        var simulator = manager.TryGetSimulator(clientId);
+        if (simulator == null)
+            return [];
+
+        var heatMap = simulator.Engine.Results.HeatMap;
+        if (heatMap.Count == 0) return [];
+        
+        return heatMap.Serialise(DataFormat.JSON, 1);
     }
 }
 

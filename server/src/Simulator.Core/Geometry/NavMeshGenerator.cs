@@ -24,6 +24,7 @@ public static class NavMeshGenerator
             var triangle = triangles[i];
             var node = new NavMesh.Node(triangle);
             navMesh.Nodes.Add(node);
+            navMesh.HeatMap.Add(0);
             navMesh.CumulativeDoubleAreas.Add(node.DoubleArea + navMesh.CumulativeDoubleAreas.LastOrDefault());
             AddToGrid(navMesh, triangle, i);
         }

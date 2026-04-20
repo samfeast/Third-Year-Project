@@ -37,6 +37,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
             var t when t == typeof(NavMesh) => DataType.Mesh,
             var t when t == typeof(List<SimulationSnapshot>) => DataType.SimulationSnapshots,
             var t when t == typeof(SimulationSnapshot) => DataType.SimulationSnapshot,
+            var t when t == typeof(List<ResultsCollector.HeatMapCell>) => DataType.HeatMap,
             _ => throw new NotSupportedException($"Unknown data type {typeof(T).Name}")
         };
 
@@ -76,6 +77,13 @@ public static class SerialiserRegistryFactory
         {
             return new SerialiserRegistry<T>([
                 (ISerialiser<T>) new JsonSimulationSnapshotSerialiser()
+            ]);
+        }
+
+        if (typeof(T) == typeof(List<ResultsCollector.HeatMapCell>))
+        {
+            return new SerialiserRegistry<T>([
+                (ISerialiser<T>) new JsonHeatMapSerialiser()
             ]);
         }
 

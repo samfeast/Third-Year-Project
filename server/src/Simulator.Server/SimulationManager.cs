@@ -49,7 +49,7 @@ public class SimulationManager
             Console.WriteLine($"Simulation {id} finished on step {snapshot.Step}");
             simulator.Status = SimulationStatus.Finished;
         }
-                
+
         simulator.AddSnapshot(snapshot);
     }
     
