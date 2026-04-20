@@ -14,4 +14,5 @@ export const preset1: Layout = {
   positive: positive,
   negatives: [],
   exits: [[12500, 12500]],
+  name: "Preset 1",
 };

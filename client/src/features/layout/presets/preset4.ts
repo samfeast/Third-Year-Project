@@ -98,4 +98,5 @@ export const preset4: Layout = {
     [44000, 20000],
     [16000, 20000],
   ],
+  name: "Preset 4",
 };

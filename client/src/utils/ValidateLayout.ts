@@ -45,11 +45,21 @@ export function validateLayout(data: any): Layout {
     return p;
   });
 
+  const name =
+    data.name === undefined
+      ? "Custom"
+      : typeof data.name === "string"
+        ? data.name
+        : (() => {
+            throw new Error("Invalid name");
+          })();
+
   return {
     type: data.type,
     version: data.version,
     positive,
     negatives,
     exits,
+    name,
   };
 }

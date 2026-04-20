@@ -1,4 +1,3 @@
-/* The switch - the box around the slider */
 .switch {
   position: relative;
   display: inline-block;
@@ -6,14 +5,12 @@
   height: 34px;
 }
 
-/* Hide default HTML checkbox */
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* The slider */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -21,7 +18,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: #f04747;
   -webkit-transition: .4s;
   transition: .4s;
 }
@@ -39,11 +36,11 @@
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: #43b581;
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
+  box-shadow: 0 0 1px #43b581;
 }
 
 input:checked + .slider:before {
@@ -65,11 +62,15 @@ input:checked + .slider:before {
 .toggle-wrapper {
   display: inline-flex;
   align-items: center;
-  gap: 8px; /* space between switch and labels */
+  gap: 12px;
 }
 
 /* Optional label styling */
 .toggle-label {
-  font-size: 20px;
   user-select: none;
+  color: #eee;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
 }

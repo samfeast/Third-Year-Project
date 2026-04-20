@@ -6,4 +6,5 @@ export const emptyLayout: Layout = {
   positive: [],
   negatives: [],
   exits: [],
+  name: "Empty",
 };

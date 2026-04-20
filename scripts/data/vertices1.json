@@ -1,11 +1,11 @@
 {
-    "type": "geometry",
-    "version": 1,
-    "positive": [
-        [0,0],
-        [25000,0],
-        [25000,25000],
-        [0,25000]
-    ],
-    "negatives": []
+  "type": "geometry",
+  "version": 1,
+  "positive": [
+    [0, 0],
+    [25000, 0],
+    [25000, 25000],
+    [0, 25000]
+  ],
+  "negatives": []
 }

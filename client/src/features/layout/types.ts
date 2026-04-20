@@ -6,4 +6,5 @@ export type Layout = {
   positive: Point[];
   negatives: Point[][];
   exits: Point[];
+  name: string;
 };
