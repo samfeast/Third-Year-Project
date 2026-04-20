@@ -5,4 +5,5 @@ export type Layout = {
   version: number;
   positive: Point[];
   negatives: Point[][];
+  exits: Point[];
 };

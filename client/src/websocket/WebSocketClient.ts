@@ -2,6 +2,8 @@ import { type Action } from "../store/reducer";
 import { snapshotStore } from "../features/simulation/snapshotStore";
 
 import { convertSnapshots } from "../utils/ServerSnapshotConverter";
+import { heatMapStore } from "../features/analysis/heatMapStore";
+import { convertHeatMap } from "../utils/ServerHeatMapConverter";
 
 class WebSocketClient {
   private socket?: WebSocket;
@@ -12,7 +14,7 @@ class WebSocketClient {
 
     this.connected = true;
 
-    this.socket = new WebSocket("ws://localhost:5158/ws");
+    this.socket = new WebSocket("ws://localhost:5678/ws");
 
     dispatch({ type: "SET_CONNECTION_STATUS", payload: "connecting" });
 
@@ -30,7 +32,6 @@ class WebSocketClient {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
     };
 
-    // Assume all incoming messages are snapshots for now
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
 
@@ -38,6 +39,11 @@ class WebSocketClient {
       if (msg.type === "snapshots") {
         const snapshots = convertSnapshots(msg);
         snapshotStore.addSnapshots(snapshots);
+      }
+
+      if (msg.type === "heatmap") {
+        const heatMap = convertHeatMap(msg);
+        heatMapStore.setHeatMap(heatMap);
       }
     };
   }

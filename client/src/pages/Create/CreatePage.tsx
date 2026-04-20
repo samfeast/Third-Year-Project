@@ -12,9 +12,15 @@ import { preset4 } from "../../features/layout/presets/preset4";
 import { emptyLayout } from "../../features/layout/defaults";
 
 import styles from "./CreatePage.module.css";
+import { validateLayout } from "../../utils/ValidateLayout";
+
+import { snapshotStore } from "../../features/simulation/snapshotStore";
+import { heatMapStore } from "../../features/analysis/heatMapStore";
 
 export default function CreatePage() {
   const { state, dispatch } = useStore();
+
+  const [layout, setLayout] = useState<Layout | null>(null);
 
   const [showPresets, setShowPresets] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
@@ -24,7 +30,6 @@ export default function CreatePage() {
 
   function handlePresetSelect(name: string) {
     setSelectedPreset(name);
-    const agentDensity = state.config.agentDensity;
     let layout: Layout;
     switch (name) {
       case "Preset 1":
@@ -46,10 +51,49 @@ export default function CreatePage() {
     dispatch({
       type: "SET_CONFIG",
       payload: {
-        agentDensity: agentDensity,
+        agentDensity: state.config.agentDensity,
+        seed: state.config.seed,
         layout: layout,
       },
     });
+
+    snapshotStore.clearSnapshotBuffer();
+    heatMapStore.setHeatMap(null);
+  }
+
+  function handleUpload(setLayout: (layout: Layout) => void) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = async (event: Event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+
+        const layout = validateLayout(json);
+        const agentDensity = state.config.agentDensity;
+        dispatch({
+          type: "SET_CONFIG",
+          payload: {
+            agentDensity: state.config.agentDensity,
+            seed: state.config.seed,
+            layout: layout,
+          },
+        });
+
+        snapshotStore.clearSnapshotBuffer();
+        heatMapStore.setHeatMap(null);
+      } catch (err) {
+        console.error("Failed to load layout:", err);
+        alert("Invalid layout file");
+      }
+    };
+
+    input.click();
   }
 
   const presets = [
@@ -61,29 +105,20 @@ export default function CreatePage() {
 
   return (
     <div>
-      <ToggleSwitch
-        leftLabel={""}
-        rightLabel={"Choose from presets"}
-        checked={showPresets}
-        onChange={setShowPresets}
-      />
-
-      {showPresets ? (
-        <div className={styles["preset-grid"]}>
-          {presets.map((preset) => (
-            <PresetCard
-              key={preset.name}
-              name={preset.name}
-              imageUrl={exampleImageUrl}
-              description={preset.description}
-              onClick={handlePresetSelect}
-              selected={selectedPreset === preset.name} // highlight if selected
-            />
-          ))}
-        </div>
-      ) : (
-        <h1>Coming soon</h1>
-      )}
+      Choose from presets or
+      <button onClick={() => handleUpload(setLayout)}>Upload</button>
+      <div className={styles["preset-grid"]}>
+        {presets.map((preset) => (
+          <PresetCard
+            key={preset.name}
+            name={preset.name}
+            imageUrl={exampleImageUrl}
+            description={preset.description}
+            onClick={handlePresetSelect}
+            selected={selectedPreset === preset.name} // highlight if selected
+          />
+        ))}
+      </div>
     </div>
   );
 }

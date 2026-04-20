@@ -94,4 +94,8 @@ export const preset4: Layout = {
     negative9,
     negative10,
   ],
+  exits: [
+    [44000, 20000],
+    [16000, 20000],
+  ],
 };

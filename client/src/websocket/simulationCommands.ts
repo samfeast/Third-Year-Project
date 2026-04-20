@@ -19,3 +19,10 @@ export function getSnapshots(clientId: string, playbackInfo: PlaybackInfo) {
     payload: playbackInfo,
   });
 }
+
+export function getHeatMap(clientId: string) {
+  websocketClient.send({
+    clientId: clientId,
+    command: "get-heatmap",
+  });
+}

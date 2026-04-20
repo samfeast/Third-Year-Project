@@ -44,7 +44,7 @@ export default function SimulationCanvas() {
   );
 }
 
-function GetScaleAndOffset(
+export function GetScaleAndOffset(
   layout: Layout,
   canvasWidth: number,
   canvasHeight: number,

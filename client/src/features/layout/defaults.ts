@@ -5,4 +5,5 @@ export const emptyLayout: Layout = {
   version: 1,
   positive: [],
   negatives: [],
+  exits: [],
 };

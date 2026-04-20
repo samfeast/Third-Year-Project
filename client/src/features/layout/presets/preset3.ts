@@ -61,4 +61,5 @@ export const preset3: Layout = {
   version: 1,
   positive: positive,
   negatives: [negative1, negative2, negative3, negative4],
+  exits: [[2475, 500]],
 };
