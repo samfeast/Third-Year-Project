@@ -31,7 +31,7 @@ export default function SimulationCanvas() {
     <Application
       width={canvasWidth}
       height={canvasHeight}
-      background={0xaaaaaa}
+      background={0x121212}
     >
       <container scale={{ x: scale, y: -scale }} x={offsetX} y={offsetY}>
         <DrawLayout layout={layout} />

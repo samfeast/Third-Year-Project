@@ -16,12 +16,13 @@ public class SimulationEngine
     private int _globalMaxSpeed = 1750; // Would require a random sample of 0.9999, so only clamp in 1/10000 cases
     private double _orcaTimeHorizon = 2f;
     private int _maxAgentId = 0;
+    private int _heatmapSnapshotInterval = 50;
 
     private double _speedShape;
     private double _speedScale;
     private int _agentRadius;
     private int _exitRadius;
-    
+
     public ResultsCollector Results = new();
     
     public List<Agent> LiveAgents;
@@ -29,7 +30,6 @@ public class SimulationEngine
 
     public SimulationEngine(SimulationConfig config)
     {
-        Console.WriteLine($"Initialising simulation with {config.NumAgents} agents, seed {config.Seed}, radius {config.AgentRadius}");
         TimeStep = config.TimeStep;
         // Initialise RNG with random seed if one isn't provided
         _rng = config.Seed == null ? new Random() : new Random(config.Seed.Value);
@@ -38,8 +38,10 @@ public class SimulationEngine
         _agentRadius = config.AgentRadius;
         _exitRadius = config.ExitRadius;
 
-        Mesh = NavMeshGenerator.GenerateNavMesh(config.Geometry);
+        Mesh = NavMeshGenerator.GenerateNavMesh(config.Geometry, 5000, _agentRadius);
         LiveAgents = new List<Agent>(config.NumAgents);
+        
+        Results.Heatmap.ConstructGrid(Mesh, _agentRadius);
 
         // Generate enough start and end points for start and end positions of all agents
         var points = GenerateRandomPoints(2 * config.NumAgents);
@@ -196,6 +198,8 @@ public class SimulationEngine
 
             if (!agentSnapshot.ReachedDestination)
             {
+                Results.Heatmap.Add(agentSnapshot.Position);
+                
                 newLiveAgents.Add(agent);
                 allComplete = false;
 
@@ -223,8 +227,8 @@ public class SimulationEngine
         LiveAgents.Clear();
         LiveAgents.AddRange(newLiveAgents);
         
-        if (allComplete)
-            GenerateHeatmap();
+        if (allComplete || Step % _heatmapSnapshotInterval == 0)
+            Results.TakeHeatmapSnapshot(Step);
 
         return snapshot;
     }
@@ -265,22 +269,5 @@ public class SimulationEngine
         agentConstraints = new MovementConstraints();
         constraints[agentId] = agentConstraints;
         return agentConstraints;
-    }
-
-    private void GenerateHeatmap()
-    {
-        double maxDensity = -1;
-        for (int i = 0; i < Mesh.Nodes.Count; i++)
-        {
-            var density = (double)Mesh.HeatMap[i] / Mesh.Nodes[i].DoubleArea;
-            if (density > maxDensity)
-                maxDensity = density;
-        }
-
-        for (int i = 0; i < Mesh.Nodes.Count; i++)
-        {
-            var density = (double)Mesh.HeatMap[i] / Mesh.Nodes[i].DoubleArea / maxDensity;
-            Results.HeatMap.Add(new ResultsCollector.HeatMapCell(Mesh.Nodes[i].Triangle, density));
-        }
     }
 }

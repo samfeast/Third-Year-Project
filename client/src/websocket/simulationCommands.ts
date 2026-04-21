@@ -1,4 +1,5 @@
 // Commands to be sent over the web socket
+import type { HeatmapInfo } from "../features/analysis/types";
 import type { PlaybackInfo } from "../features/simulation/types";
 import type { Config } from "../types/types";
 
@@ -20,9 +21,10 @@ export function getSnapshots(clientId: string, playbackInfo: PlaybackInfo) {
   });
 }
 
-export function getHeatMap(clientId: string) {
+export function getHeatmap(clientId: string, heatmapInfo: HeatmapInfo) {
   websocketClient.send({
     clientId: clientId,
     command: "get-heatmap",
+    payload: heatmapInfo,
   });
 }

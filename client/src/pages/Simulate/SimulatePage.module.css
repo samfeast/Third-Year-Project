@@ -16,32 +16,38 @@
 .simulation-page {
   display: flex;
   flex-direction: column; /* Stack buttons and canvas vertically */
-  height: 100vh;
-  padding: 16px;
+  height: 85vh;
+  padding: 4px;
   box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
 }
 
 .button-row {
   display: flex;
   gap: 4px; /* Space between buttons */
   margin-bottom: 16px;
+  justify-content: center;
 }
 
 .canvas-area {
   display: flex;
-  gap: 80px; /* Space between canvas and slider */
+  gap: 60px; /* Space between canvas and slider */
   padding-bottom: 20px;
+  justify-content: center;
+  padding-left: 100px;
 }
 
 canvas {
   width: 1400px;
   height: 700px;
   display: block;
-  background: #aaaaaa;
+  background: #121212;
 }
 
 .slider-wrapper {
   display: flex;
   align-items: center;
   height: 700px;
+  justify-content: center;
 }

@@ -2,8 +2,8 @@ import { type Action } from "../store/reducer";
 import { snapshotStore } from "../features/simulation/snapshotStore";
 
 import { convertSnapshots } from "../utils/ServerSnapshotConverter";
-import { heatMapStore } from "../features/analysis/heatMapStore";
-import { convertHeatMap } from "../utils/ServerHeatMapConverter";
+import { heatmapStore } from "../features/analysis/heatMapStore";
+import { convertHeatmap } from "../utils/ServerHeatMapConverter";
 
 class WebSocketClient {
   private socket?: WebSocket;
@@ -42,8 +42,8 @@ class WebSocketClient {
       }
 
       if (msg.type === "heatmap") {
-        const heatMap = convertHeatMap(msg);
-        heatMapStore.setHeatMap(heatMap);
+        const heatmap = convertHeatmap(msg);
+        heatmapStore.setHeatmap(heatmap);
       }
     };
   }

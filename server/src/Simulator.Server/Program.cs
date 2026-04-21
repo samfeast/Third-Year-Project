@@ -66,7 +66,7 @@ public class Program
 
             Console.WriteLine("New websocket connection established");
 
-            var buffer = new byte[1024];
+            var buffer = new byte[2048];
             while (!context.RequestAborted.IsCancellationRequested && webSocket.State == WebSocketState.Open)
             {
                 var result = await webSocket.ReceiveAsync(buffer, context.RequestAborted);
@@ -78,6 +78,7 @@ public class Program
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
                     var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    Console.WriteLine(messageJson);
                     var message = JsonSerializer.Deserialize<ClientMessage>(messageJson);
 
                     if (message == null) continue;
@@ -107,7 +108,11 @@ public class Program
 
                             break;
                         case "get-heatmap":
-                            var heatMapBytes = HandleGetHeatMap(manager, clientId);
+                            var getHeatmapPayload = message.payload.Deserialize<GetHeatmapPayload>();
+                            if (getHeatmapPayload == null)
+                                throw new Exception("Missing payload in get-heatmap command");
+                            
+                            var heatMapBytes = HandleGetHeatMap(manager, clientId, getHeatmapPayload);
                             if (heatMapBytes.Length > 0)
                                 await webSocket.SendAsync(heatMapBytes, WebSocketMessageType.Text, true,
                                     context.RequestAborted);
@@ -176,15 +181,41 @@ public class Program
         return snapshots.Serialise(DataFormat.JSON, 2);
     }
 
-    private static byte[] HandleGetHeatMap(SimulationManager manager, Guid clientId)
+    private static byte[] HandleGetHeatMap(SimulationManager manager, Guid clientId, GetHeatmapPayload data)
     {
         var simulator = manager.TryGetSimulator(clientId);
-        if (simulator == null)
+        if (simulator == null || data.startStep > data.endStep)
             return [];
 
-        var heatMap = simulator.Engine.Results.HeatMap;
-        if (heatMap.Count == 0) return [];
+        var results = simulator.Engine.Results;
+        var heatmapSnapshots = results.HeatmapSnapshots;
 
-        return heatMap.Serialise(DataFormat.JSON, 1);
+        var snapshotsInRange = new List<byte[][]>();
+        
+        for (int i = 0; i < heatmapSnapshots.Count; i++)
+        {
+            if (heatmapSnapshots[i].step >= data.startStep && heatmapSnapshots[i].step <= data.endStep)
+                snapshotsInRange.Add(heatmapSnapshots[i].snapshot);
+
+            if (heatmapSnapshots[i].step > data.endStep) break;
+        }
+
+        if (snapshotsInRange.Count == 0) return [];
+
+        var rawHeatmap = results.HeatmapSum(snapshotsInRange);
+        
+        var heatmap = results.GaussianBlur(rawHeatmap, results.Heatmap.ValidGrid);
+        var origin = new Vector2Int(results.Heatmap.OriginX, results.Heatmap.OriginY);
+
+        var blurredHeatmap = new ResultsCollector.BlurredHeatmap()
+        {
+            Heatmap = heatmap,
+            Origin = origin,
+            CellSize = results.Heatmap.CellSize,
+            Width = results.Heatmap.Width,
+            Height = results.Heatmap.Height
+        };
+        
+        return blurredHeatmap.Serialise(DataFormat.JSON, 1);
     }
 }

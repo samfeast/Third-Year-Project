@@ -1,10 +1,74 @@
+.preset-grid {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding: 2rem 2rem 2rem 2rem;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.main-title {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  background-color: #121212;
+}
+
+.editor-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background-color: #2a2a2a;
+  border-bottom: 1px solid #444;
+  height: 5vh;
+}
+
+.back-btn {
+  background: #5865f2;
+  color: #eee;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+
+.back-btn:hover {
+  background: #4b57d1;
+  color: #fff;
+
+}
+
+.editor-status {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.editor-status strong {
+  color: #5865f2;
+  margin-left: 4px;
+}
+
 .canvas-frame {
   flex-grow: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  padding: 40px;
+  padding: 0px;
 }
 
 canvas {

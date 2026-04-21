@@ -6,5 +6,5 @@ public enum DataType
     Mesh,
     SimulationSnapshots,
     SimulationSnapshot,
-    HeatMap
+    Heatmap
 }

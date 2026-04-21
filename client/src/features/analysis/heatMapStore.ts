@@ -1,8 +1,8 @@
-import type { HeatMap } from "./types";
+import type { Heatmap } from "./types";
 
-class HeatMapStore {
+class HeatmapStore {
   private listeners = new Set<() => void>();
-  private heatMap: HeatMap | null = null;
+  private heatmap: Heatmap | null = null;
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -13,14 +13,14 @@ class HeatMapStore {
     this.listeners.forEach((l) => l());
   }
 
-  setHeatMap(heatMap: HeatMap | null) {
-    this.heatMap = heatMap;
+  setHeatmap(heatmap: Heatmap | null) {
+    this.heatmap = heatmap;
     this.emit();
   }
 
-  getHeatMap(): HeatMap | null {
-    return this.heatMap;
+  getHeatmap(): Heatmap | null {
+    return this.heatmap;
   }
 }
 
-export const heatMapStore = new HeatMapStore();
+export const heatmapStore = new HeatmapStore();

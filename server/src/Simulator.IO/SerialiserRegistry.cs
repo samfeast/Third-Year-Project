@@ -1,4 +1,3 @@
-using Simulator.Core;
 using Simulator.Core.Geometry;
 using Simulator.Core.Geometry.Utils;
 using Simulator.Core.Utils;
@@ -37,7 +36,7 @@ public class SerialiserRegistry<T>(IEnumerable<ISerialiser<T>> serialisers)
             var t when t == typeof(NavMesh) => DataType.Mesh,
             var t when t == typeof(List<SimulationSnapshot>) => DataType.SimulationSnapshots,
             var t when t == typeof(SimulationSnapshot) => DataType.SimulationSnapshot,
-            var t when t == typeof(List<ResultsCollector.HeatMapCell>) => DataType.HeatMap,
+            var t when t == typeof(ResultsCollector.BlurredHeatmap) => DataType.Heatmap,
             _ => throw new NotSupportedException($"Unknown data type {typeof(T).Name}")
         };
 
@@ -80,10 +79,10 @@ public static class SerialiserRegistryFactory
             ]);
         }
 
-        if (typeof(T) == typeof(List<ResultsCollector.HeatMapCell>))
+        if (typeof(T) == typeof(ResultsCollector.BlurredHeatmap))
         {
             return new SerialiserRegistry<T>([
-                (ISerialiser<T>) new JsonHeatMapSerialiser()
+                (ISerialiser<T>) new JsonHeatmapSerialiser()
             ]);
         }
 

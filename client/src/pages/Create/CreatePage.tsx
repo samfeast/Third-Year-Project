@@ -12,16 +12,20 @@ import { preset1 } from "../../features/layout/presets/preset1";
 import { preset2 } from "../../features/layout/presets/preset2";
 import { preset3 } from "../../features/layout/presets/preset3";
 import { preset4 } from "../../features/layout/presets/preset4";
+import { preset5 } from "../../features/layout/presets/preset5";
 import { emptyLayout } from "../../features/layout/defaults";
 
 import preset1Img from "../../features/layout/presets/assets/preset1Img.png";
+import preset2Img from "../../features/layout/presets/assets/preset2Img.png";
+import preset3Img from "../../features/layout/presets/assets/preset3Img.png";
+import preset4Img from "../../features/layout/presets/assets/preset4Img.png";
 import customImg from "../../features/layout/presets/assets/custom.png";
 
 import styles from "./CreatePage.module.css";
 import { validateLayout } from "../../utils/ValidateLayout";
 
 import { snapshotStore } from "../../features/simulation/snapshotStore";
-import { heatMapStore } from "../../features/analysis/heatMapStore";
+import { heatmapStore } from "../../features/analysis/heatMapStore";
 import { GetScaleAndOffset } from "../Simulate/SimulationCanvas";
 import DrawLayout from "../Simulate/DrawLayout";
 
@@ -48,6 +52,9 @@ export default function CreatePage() {
       case "Preset 4":
         layout = preset4;
         break;
+      case "Preset 5":
+        layout = preset5;
+        break;
       default:
         layout = emptyLayout;
     }
@@ -60,6 +67,7 @@ export default function CreatePage() {
         seed: state.config.seed,
         speedShape: state.config.speedShape,
         speedScale: state.config.speedScale,
+        exitRadius: state.config.exitRadius,
         layout: layout,
       },
     });
@@ -67,7 +75,7 @@ export default function CreatePage() {
     setLayout(layout);
 
     snapshotStore.clearSnapshotBuffer();
-    heatMapStore.setHeatMap(null);
+    heatmapStore.setHeatmap(null);
   }
 
   function handleUpload(setLayout: (layout: Layout) => void) {
@@ -93,6 +101,7 @@ export default function CreatePage() {
             seed: state.config.seed,
             speedShape: state.config.speedShape,
             speedScale: state.config.speedScale,
+            exitRadius: state.config.exitRadius,
             layout: layout,
           },
         });
@@ -100,7 +109,7 @@ export default function CreatePage() {
         setLayout(layout);
 
         snapshotStore.clearSnapshotBuffer();
-        heatMapStore.setHeatMap(null);
+        heatmapStore.setHeatmap(null);
       } catch (err) {
         console.error("Failed to load layout:", err);
         alert("Invalid layout file");
@@ -122,23 +131,22 @@ export default function CreatePage() {
         seed: state.config.seed,
         speedShape: state.config.speedShape,
         speedScale: state.config.speedScale,
+        exitRadius: state.config.exitRadius,
         layout: emptyLayout,
       },
     });
   }
 
   const presets = [
-    { name: "Preset 1", description: "Walkable Area: 625 m2", img: preset1Img },
-    { name: "Preset 2", description: "Walkable Area: 865 m2", img: preset1Img },
+    { name: "Preset 1", description: "Exit Points: 1", img: preset1Img },
+    { name: "Preset 2", description: "Exit Points: 1", img: preset2Img },
     {
       name: "Preset 3",
-      description: "Walkable Area: ?\nExit Points: 2",
-      img: preset1Img,
+      description: "Exit Points: 1",
+      img: preset3Img,
     },
-    { name: "Preset 4", description: "Walkable Area: ?", img: preset1Img },
-    { name: "Preset 5", description: "Walkable Area: ?", img: preset1Img },
-    { name: "Preset 6", description: "Walkable Area: ?", img: preset1Img },
-    { name: "Preset 7", description: "Walkable Area: ?", img: preset1Img },
+    { name: "Preset 4", description: "Exit Points: 2", img: preset4Img },
+    { name: "Preset 5", description: "Exit Points: 1", img: preset4Img },
   ];
 
   const canvasWidth = 1400;

@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
-import { heatMapStore } from "./heatMapStore";
+import { heatmapStore } from "./heatMapStore";
 
-export function useHeatMap() {
-  return useSyncExternalStore(heatMapStore.subscribe, () =>
-    heatMapStore.getHeatMap(),
+export function useHeatmap() {
+  return useSyncExternalStore(heatmapStore.subscribe, () =>
+    heatmapStore.getHeatmap(),
   );
 }
