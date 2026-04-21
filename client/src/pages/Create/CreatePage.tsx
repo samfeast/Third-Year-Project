@@ -19,6 +19,7 @@ import preset1Img from "../../features/layout/presets/assets/preset1Img.png";
 import preset2Img from "../../features/layout/presets/assets/preset2Img.png";
 import preset3Img from "../../features/layout/presets/assets/preset3Img.png";
 import preset4Img from "../../features/layout/presets/assets/preset4Img.png";
+import preset5Img from "../../features/layout/presets/assets/preset5Img.png";
 import customImg from "../../features/layout/presets/assets/custom.png";
 
 import styles from "./CreatePage.module.css";
@@ -146,7 +147,7 @@ export default function CreatePage() {
       img: preset3Img,
     },
     { name: "Preset 4", description: "Exit Points: 2", img: preset4Img },
-    { name: "Preset 5", description: "Exit Points: 1", img: preset4Img },
+    { name: "Preset 5", description: "Exit Points: 1", img: preset5Img },
   ];
 
   const canvasWidth = 1400;
